@@ -10,6 +10,13 @@
 #include <homekit/characteristics.h>
 #include "wifi.h"
 
+#include <dht/dht.h>
+
+
+#ifndef SENSOR_PIN
+#error SENSOR_PIN is not specified
+#endif
+
 
 static void wifi_init() {
     struct sdk_station_config wifi_config = {
@@ -22,7 +29,6 @@ static void wifi_init() {
     sdk_wifi_station_connect();
 }
 
-const int temperature_sensor_gpio = 2;
 
 void temperature_sensor_identify(bool _value) {
     printf("Temperature sensor identify\n");
@@ -39,17 +45,42 @@ homekit_characteristic_t temperature = {
     .min_step = (float[]) {0.1},
 };
 
-void temperature_sensor_task(void *_args) {
-    while (1) {
-        temperature.float_value = hwrand() % 100;
-        homekit_characteristic_notify(&temperature);
+homekit_characteristic_t humidity = {
+    .type = HOMEKIT_CHARACTERISTIC_CURRENT_RELATIVE_HUMIDITY,
+    .format = homekit_format_float,
+    .unit = homekit_unit_percentage,
+    .permissions = homekit_permissions_paired_read
+                 | homekit_permissions_notify,
+    .min_value = (float[]) {0},
+    .max_value = (float[]) {100},
+    .min_step = (float[]) {1},
+};
 
-        vTaskDelay(500);
+void temperature_sensor_task(void *_args) {
+    gpio_set_pullup(SENSOR_PIN, false, false);
+
+    float humidity_value, temperature_value;
+    while (1) {
+        bool success = dht_read_float_data(
+            SENSOR_PIN, DHT_TYPE_DHT11,
+            &humidity_value, &temperature_value
+        );
+        if (success) {
+            temperature.float_value = temperature_value;
+            humidity.float_value = humidity_value;
+
+            homekit_characteristic_notify(&temperature);
+            homekit_characteristic_notify(&humidity);
+        } else {
+            printf("Couldnt read data from sensor\n");
+        }
+
+        vTaskDelay(3000 / portTICK_PERIOD_MS);
     }
 }
 
 void temperature_sensor_init() {
-    xTaskCreate(temperature_sensor_task, "Temperatore Sensor", 128, NULL, 2, NULL);
+    xTaskCreate(temperature_sensor_task, "Temperatore Sensor", 256, NULL, 2, NULL);
 }
 
 
@@ -58,7 +89,7 @@ homekit_accessory_t *accessories[] = {
         HOMEKIT_SERVICE(HOMEKIT_SERVICE_ACCESSORY_INFORMATION, .characteristics={
             HOMEKIT_DECLARE_CHARACTERISTIC_NAME("Temperature Sensor"),
             HOMEKIT_DECLARE_CHARACTERISTIC_MANUFACTURER("HaPK"),
-            HOMEKIT_DECLARE_CHARACTERISTIC_SERIAL_NUMBER("037A2BABF19D"),
+            HOMEKIT_DECLARE_CHARACTERISTIC_SERIAL_NUMBER("0012345"),
             HOMEKIT_DECLARE_CHARACTERISTIC_MODEL("MyTemperatureSensor"),
             HOMEKIT_DECLARE_CHARACTERISTIC_FIRMWARE_REVISION("0.1"),
             HOMEKIT_DECLARE_CHARACTERISTIC_IDENTIFY(temperature_sensor_identify),
@@ -66,6 +97,10 @@ homekit_accessory_t *accessories[] = {
         HOMEKIT_SERVICE(HOMEKIT_SERVICE_TEMPERATURE_SENSOR, .primary=true, .characteristics={
             HOMEKIT_DECLARE_CHARACTERISTIC_NAME("Temperature Sensor"),
             &temperature
+        }),
+        HOMEKIT_SERVICE(HOMEKIT_SERVICE_HUMIDITY_SENSOR, .characteristics={
+            HOMEKIT_DECLARE_CHARACTERISTIC_NAME("Humidity Sensor"),
+            &humidity
         }),
     }),
     NULL
