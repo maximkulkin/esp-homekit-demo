@@ -7,7 +7,6 @@
 #include <task.h>
 
 #include <homekit/homekit.h>
-#include <homekit/types.h>
 #include <homekit/characteristics.h>
 #include "wifi.h"
 
@@ -72,12 +71,16 @@ homekit_accessory_t *accessories[] = {
     NULL
 };
 
+homekit_server_config_t config = {
+    .accessories = accessories,
+    .password = "111-11-111"
+};
 
 void user_init(void) {
     uart_set_baud(0, 115200);
 
     wifi_init();
     temperature_sensor_init();
-    homekit_server_init(accessories);
+    homekit_server_init(&config);
 }
 
