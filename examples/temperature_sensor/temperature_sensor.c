@@ -62,7 +62,7 @@ void temperature_sensor_task(void *_args) {
     float humidity_value, temperature_value;
     while (1) {
         bool success = dht_read_float_data(
-            SENSOR_PIN, DHT_TYPE_DHT11,
+            DHT_TYPE_DHT11, SENSOR_PIN,
             &humidity_value, &temperature_value
         );
         if (success) {
