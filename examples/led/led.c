@@ -36,10 +36,14 @@ void led_init() {
 
 void led_identify_task(void *_args) {
     for (int i=0; i<3; i++) {
-        led_write(true);
-        vTaskDelay(500 / portTICK_PERIOD_MS);
-        led_write(false);
-        vTaskDelay(500 / portTICK_PERIOD_MS);
+        for (int j=0; j<2; j++) {
+            led_write(true);
+            vTaskDelay(100 / portTICK_PERIOD_MS);
+            led_write(false);
+            vTaskDelay(100 / portTICK_PERIOD_MS);
+        }
+
+        vTaskDelay(250 / portTICK_PERIOD_MS);
     }
 
     led_write(led_on);
@@ -47,39 +51,47 @@ void led_identify_task(void *_args) {
     vTaskDelete(NULL);
 }
 
-void led_identify(bool _value) {
+void led_identify(homekit_value_t _value) {
     printf("LED identify\n");
     xTaskCreate(led_identify_task, "LED identify", 128, NULL, 2, NULL);
 }
 
-bool led_on_get() {
-    return led_on;
+homekit_value_t led_on_get() {
+    return HOMEKIT_BOOL(led_on);
 }
 
-void led_on_set(bool value) {
-    led_on = value;
+void led_on_set(homekit_value_t value) {
+    if (value.format != homekit_format_bool) {
+        printf("Invalid value format: %d\n", value.format);
+        return;
+    }
+
+    led_on = value.bool_value;
     led_write(led_on);
 }
 
 
 homekit_accessory_t *accessories[] = {
-    HOMEKIT_ACCESSORY(.id=1, .category=homekit_accessory_category_lightbulb, .services={
-        HOMEKIT_SERVICE(HOMEKIT_SERVICE_ACCESSORY_INFORMATION, .characteristics={
+    HOMEKIT_ACCESSORY(.id=1, .category=homekit_accessory_category_lightbulb, .services=(homekit_service_t*[]){
+        HOMEKIT_SERVICE(HOMEKIT_SERVICE_ACCESSORY_INFORMATION, .characteristics=(homekit_characteristic_t*[]){
             HOMEKIT_DECLARE_CHARACTERISTIC_NAME("Sample LED"),
             HOMEKIT_DECLARE_CHARACTERISTIC_MANUFACTURER("HaPK"),
             HOMEKIT_DECLARE_CHARACTERISTIC_SERIAL_NUMBER("037A2BABF19D"),
             HOMEKIT_DECLARE_CHARACTERISTIC_MODEL("MyLED"),
             HOMEKIT_DECLARE_CHARACTERISTIC_FIRMWARE_REVISION("0.1"),
             HOMEKIT_DECLARE_CHARACTERISTIC_IDENTIFY(led_identify),
+            NULL
         }),
-        HOMEKIT_SERVICE(HOMEKIT_SERVICE_LIGHTBULB, .primary=true, .characteristics={
+        HOMEKIT_SERVICE(HOMEKIT_SERVICE_LIGHTBULB, .primary=true, .characteristics=(homekit_characteristic_t*[]){
             HOMEKIT_DECLARE_CHARACTERISTIC_NAME("Sample LED"),
             HOMEKIT_DECLARE_CHARACTERISTIC_ON(
                 false,
                 .getter=led_on_get,
                 .setter=led_on_set
             ),
+            NULL
         }),
+        NULL
     }),
     NULL
 };

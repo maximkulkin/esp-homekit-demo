@@ -30,7 +30,7 @@ static void wifi_init() {
 }
 
 
-void temperature_sensor_identify(bool _value) {
+void temperature_sensor_identify(homekit_value_t _value) {
     printf("Temperature sensor identify\n");
 }
 
@@ -85,23 +85,27 @@ void temperature_sensor_init() {
 
 
 homekit_accessory_t *accessories[] = {
-    HOMEKIT_ACCESSORY(.id=1, .category=homekit_accessory_category_thermostat, .services={
-        HOMEKIT_SERVICE(HOMEKIT_SERVICE_ACCESSORY_INFORMATION, .characteristics={
+    HOMEKIT_ACCESSORY(.id=1, .category=homekit_accessory_category_thermostat, .services=(homekit_service_t*[]) {
+        HOMEKIT_SERVICE(HOMEKIT_SERVICE_ACCESSORY_INFORMATION, .characteristics=(homekit_characteristic_t*[]) {
             HOMEKIT_DECLARE_CHARACTERISTIC_NAME("Temperature Sensor"),
             HOMEKIT_DECLARE_CHARACTERISTIC_MANUFACTURER("HaPK"),
             HOMEKIT_DECLARE_CHARACTERISTIC_SERIAL_NUMBER("0012345"),
             HOMEKIT_DECLARE_CHARACTERISTIC_MODEL("MyTemperatureSensor"),
             HOMEKIT_DECLARE_CHARACTERISTIC_FIRMWARE_REVISION("0.1"),
             HOMEKIT_DECLARE_CHARACTERISTIC_IDENTIFY(temperature_sensor_identify),
+            NULL
         }),
-        HOMEKIT_SERVICE(HOMEKIT_SERVICE_TEMPERATURE_SENSOR, .primary=true, .characteristics={
+        HOMEKIT_SERVICE(HOMEKIT_SERVICE_TEMPERATURE_SENSOR, .primary=true, .characteristics=(homekit_characteristic_t*[]) {
             HOMEKIT_DECLARE_CHARACTERISTIC_NAME("Temperature Sensor"),
-            &temperature
+            &temperature,
+            NULL
         }),
-        HOMEKIT_SERVICE(HOMEKIT_SERVICE_HUMIDITY_SENSOR, .characteristics={
+        HOMEKIT_SERVICE(HOMEKIT_SERVICE_HUMIDITY_SENSOR, .characteristics=(homekit_characteristic_t*[]) {
             HOMEKIT_DECLARE_CHARACTERISTIC_NAME("Humidity Sensor"),
-            &humidity
+            &humidity,
+            NULL
         }),
+        NULL
     }),
     NULL
 };
