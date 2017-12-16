@@ -66,11 +66,11 @@ void temperature_sensor_task(void *_args) {
             &humidity_value, &temperature_value
         );
         if (success) {
-            temperature.float_value = temperature_value;
-            humidity.float_value = humidity_value;
+            temperature.value.float_value = temperature_value;
+            humidity.value.float_value = humidity_value;
 
-            homekit_characteristic_notify(&temperature);
-            homekit_characteristic_notify(&humidity);
+            homekit_characteristic_notify(&temperature, HOMEKIT_FLOAT(temperature_value));
+            homekit_characteristic_notify(&humidity, HOMEKIT_FLOAT(humidity_value));
         } else {
             printf("Couldnt read data from sensor\n");
         }
