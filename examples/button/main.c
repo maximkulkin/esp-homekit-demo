@@ -34,20 +34,7 @@ void button_identify(homekit_value_t _value) {
 }
 
 
-homekit_characteristic_t button_event = {
-    .type = HOMEKIT_CHARACTERISTIC_PROGRAMMABLE_SWITCH_EVENT,
-    .format = homekit_format_uint8,
-    .permissions = homekit_permissions_paired_read
-                 | homekit_permissions_notify,
-    .min_value = (float[]) {0},
-    .max_value = (float[]) {2},
-    .min_step = (float[]) {1},
-    .value.is_null = true,
-    .valid_values = {
-        .count = 3,
-        .values = (uint8_t[]) {0, 1, 2},
-    }
-};
+homekit_characteristic_t button_event = HOMEKIT_CHARACTERISTIC_(PROGRAMMABLE_SWITCH_EVENT, 0);
 
 
 void button_callback(uint8_t gpio, button_event_t event) {
@@ -76,22 +63,22 @@ homekit_accessory_t *accessories[] = {
         .category=homekit_accessory_category_programmable_switch,
         .services=(homekit_service_t*[]) {
             HOMEKIT_SERVICE(
-                HOMEKIT_SERVICE_ACCESSORY_INFORMATION,
+                ACCESSORY_INFORMATION,
                 .characteristics=(homekit_characteristic_t*[]) {
-                    HOMEKIT_DECLARE_CHARACTERISTIC_NAME("Button"),
-                    HOMEKIT_DECLARE_CHARACTERISTIC_MANUFACTURER("HaPK"),
-                    HOMEKIT_DECLARE_CHARACTERISTIC_SERIAL_NUMBER("0012345"),
-                    HOMEKIT_DECLARE_CHARACTERISTIC_MODEL("MyButton"),
-                    HOMEKIT_DECLARE_CHARACTERISTIC_FIRMWARE_REVISION("0.1"),
-                    HOMEKIT_DECLARE_CHARACTERISTIC_IDENTIFY(button_identify),
+                    HOMEKIT_CHARACTERISTIC(NAME, "Button"),
+                    HOMEKIT_CHARACTERISTIC(MANUFACTURER, "HaPK"),
+                    HOMEKIT_CHARACTERISTIC(SERIAL_NUMBER, "0012345"),
+                    HOMEKIT_CHARACTERISTIC(MODEL, "MyButton"),
+                    HOMEKIT_CHARACTERISTIC(FIRMWARE_REVISION, "0.1"),
+                    HOMEKIT_CHARACTERISTIC(IDENTIFY, button_identify),
                     NULL
                 },
             ),
             HOMEKIT_SERVICE(
-                HOMEKIT_SERVICE_STATELESS_PROGRAMMABLE_SWITCH,
+                STATELESS_PROGRAMMABLE_SWITCH,
                 .primary=true,
                 .characteristics=(homekit_characteristic_t*[]) {
-                    HOMEKIT_DECLARE_CHARACTERISTIC_NAME("Button"),
+                    HOMEKIT_CHARACTERISTIC(NAME, "Button"),
                     &button_event,
                     NULL
                 },
