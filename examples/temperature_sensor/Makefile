@@ -8,9 +8,9 @@ EXTRA_COMPONENTS = \
 	$(abspath ../../components/homekit)
 
 # DHT11 sensor pin
-SENSOR_PIN = 4
+SENSOR_PIN ?= 4
 
-FLASH_SIZE = 32
+FLASH_SIZE ?= 32
 
 EXTRA_CFLAGS += -I../.. -DHOMEKIT_SHORT_APPLE_UUIDS -DSENSOR_PIN=$(SENSOR_PIN)
 

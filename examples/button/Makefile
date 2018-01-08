@@ -6,9 +6,9 @@ EXTRA_COMPONENTS = \
 	$(abspath ../../components/cJSON) \
 	$(abspath ../../components/homekit)
 
-BUTTON_PIN = 4
+BUTTON_PIN ?= 4
 
-FLASH_SIZE = 32
+FLASH_SIZE ?= 32
 
 EXTRA_CFLAGS += -I../.. -DHOMEKIT_SHORT_APPLE_UUIDS -DBUTTON_PIN=$(BUTTON_PIN)
 
