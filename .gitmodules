@@ -7,3 +7,6 @@
 [submodule "components/homekit"]
 	path = components/homekit
 	url = https://github.com/maximkulkin/esp-homekit
+[submodule "components/wifi_config"]
+	path = components/wifi_config
+	url = https://github.com/maximkulkin/esp-wifi-config
