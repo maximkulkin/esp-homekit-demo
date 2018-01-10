@@ -124,7 +124,7 @@ void process_temperature(float temp) {
     if ((state == 1 && current_temperature.value.float_value < target_temperature.value.float_value) ||
             (state == 3 && current_temperature.value.float_value < heating_threshold.value.float_value)) {
         if (current_state.value.int_value != 1) {
-            current_state.value = HOMEKIT_INT(1);
+            current_state.value = HOMEKIT_UINT8(1);
             homekit_characteristic_notify(&current_state, current_state.value);
 
             heaterOn();
@@ -135,7 +135,7 @@ void process_temperature(float temp) {
     } else if ((state == 2 && current_temperature.value.float_value > target_temperature.value.float_value) ||
             (state == 3 && current_temperature.value.float_value > cooling_threshold.value.float_value)) {
         if (current_state.value.int_value != 2) {
-            current_state.value = HOMEKIT_INT(2);
+            current_state.value = HOMEKIT_UINT8(2);
             homekit_characteristic_notify(&current_state, current_state.value);
 
             coolerOn();
@@ -145,7 +145,7 @@ void process_temperature(float temp) {
         }
     } else {
         if (current_state.value.int_value != 0) {
-            current_state.value = HOMEKIT_INT(0);
+            current_state.value = HOMEKIT_UINT8(0);
             homekit_characteristic_notify(&current_state, current_state.value);
 
             coolerOff();
