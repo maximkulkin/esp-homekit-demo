@@ -37,6 +37,10 @@ const int relay_gpio = 12;
 const int led_gpio = 13;
 // The GPIO pin that is oconnected to the button on the Sonoff Basic.
 const int button_gpio = 0;
+// The minimum amount that has to occur between each button press.
+const uint16_t button_event_debounce_time = 100 / portTICK_PERIOD_MS;
+// The last time the button was pressed, in ticks.
+uint32_t last_button_event_time;
 
 void relay_write(bool on) {
     gpio_write(relay_gpio, on ? 1 : 0);
@@ -69,7 +73,13 @@ void switch_on_callback(homekit_characteristic_t *_ch, homekit_value_t on, void 
 }
 
 void button_intr_callback(uint8_t gpio) {
-    if (gpio_read(button_gpio) == 1) {
+    uint32_t now = xTaskGetTickCountFromISR();
+    if ((now - last_button_event_time) < button_event_debounce_time) {
+        // debounce time, ignore events
+        return;
+    }
+    last_button_event_time = now;
+    if (gpio_read(button_gpio) != 1) {
         //Toggle the Sonoff when the built-in push button is pressed
         switch_on.value.bool_value = !switch_on.value.bool_value;
         relay_write(switch_on.value.bool_value);
