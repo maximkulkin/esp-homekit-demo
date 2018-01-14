@@ -22,6 +22,8 @@
  */
 
 #include <stdio.h>
+#include <espressif/esp_wifi.h>
+#include <espressif/esp_sta.h>
 #include <esp/uart.h>
 #include <esp8266.h>
 #include <FreeRTOS.h>
@@ -110,10 +112,12 @@ void switch_identify(homekit_value_t _value) {
     xTaskCreate(switch_identify_task, "Switch identify", 128, NULL, 2, NULL);
 }
 
+homekit_characteristic_t name = HOMEKIT_CHARACTERISTIC_(NAME, "Sonoff Switch");
+
 homekit_accessory_t *accessories[] = {
     HOMEKIT_ACCESSORY(.id=1, .category=homekit_accessory_category_switch, .services=(homekit_service_t*[]){
         HOMEKIT_SERVICE(ACCESSORY_INFORMATION, .characteristics=(homekit_characteristic_t*[]){
-            HOMEKIT_CHARACTERISTIC(NAME, "Sonoff Switch"),
+            &name,
             HOMEKIT_CHARACTERISTIC(MANUFACTURER, "iTEAD"),
             HOMEKIT_CHARACTERISTIC(SERIAL_NUMBER, "037A2BABF19D"),
             HOMEKIT_CHARACTERISTIC(MODEL, "Basic"),
@@ -140,9 +144,24 @@ void on_wifi_ready() {
     homekit_server_init(&config);
 }
 
+void create_accessory_name() {
+    uint8_t macaddr[6];
+    sdk_wifi_get_macaddr(STATION_IF, macaddr);
+    
+    int name_len = snprintf(NULL, 0, "Sonoff Switch-%02X%02X%02X",
+                            macaddr[3], macaddr[4], macaddr[5]);
+    char *name_value = malloc(name_len+1);
+    snprintf(name_value, name_len+1, "Sonoff Switch-%02X%02X%02X",
+             macaddr[3], macaddr[4], macaddr[5]);
+    
+    name.value = HOMEKIT_STRING(name_value);
+}
+
 void user_init(void) {
     uart_set_baud(0, 115200);
 
+    create_accessory_name();
+    
     wifi_config_init("sonoff-switch", NULL, on_wifi_ready);
     gpio_init();
 }
