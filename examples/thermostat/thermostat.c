@@ -177,7 +177,7 @@ void temperature_sensor_task(void *_args) {
             &humidity_value, &temperature_value
         );
         if (success) {
-            printf("Got readings: temperature %g, humidity %g", temperature_value, humidity_value);
+            printf("Got readings: temperature %g, humidity %g\n", temperature_value, humidity_value);
             current_temperature.value = HOMEKIT_FLOAT(temperature_value);
             current_humidity.value = HOMEKIT_FLOAT(humidity_value);
 
