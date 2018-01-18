@@ -24,10 +24,10 @@ export ESPPORT=/dev/tty.SLAB_USBtoUART
 ```
 8. Upload firmware to ESP:
 ```shell
-    make test
+    make -C examples/led test
 ```
   or
 ```shell
-    make flash
-    make monitor
+    make -C examples/led flash
+    make -C examples/led monitor
 ```
