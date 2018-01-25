@@ -54,11 +54,9 @@ static void wifi_init() {
         .password = WIFI_PASSWORD,
     };
 
-    printf("Connecting to %s\n", WIFI_SSID);
     sdk_wifi_set_opmode(STATION_MODE);
     sdk_wifi_station_set_config(&wifi_config);
     sdk_wifi_station_connect();
-    sdk_wifi_station_set_auto_connect(true);
 }
 
 
@@ -67,14 +65,6 @@ void thermostat_identify(homekit_value_t _value) {
 }
 
 
-homekit_characteristic_t current_temperature = HOMEKIT_CHARACTERISTIC_( CURRENT_TEMPERATURE, 0 );
-homekit_characteristic_t target_temperature  = HOMEKIT_CHARACTERISTIC_( TARGET_TEMPERATURE, 22 );
-homekit_characteristic_t units               = HOMEKIT_CHARACTERISTIC_( TEMPERATURE_DISPLAY_UNITS, 0 );
-homekit_characteristic_t current_state       = HOMEKIT_CHARACTERISTIC_( CURRENT_HEATING_COOLING_STATE, 0 );
-homekit_characteristic_t target_state        = HOMEKIT_CHARACTERISTIC_( TARGET_HEATING_COOLING_STATE, 0 );
-homekit_characteristic_t cooling_threshold   = HOMEKIT_CHARACTERISTIC_( COOLING_THRESHOLD_TEMPERATURE, 25 );
-homekit_characteristic_t heating_threshold   = HOMEKIT_CHARACTERISTIC_( HEATING_THRESHOLD_TEMPERATURE, 15 );
-homekit_characteristic_t current_humidity    = HOMEKIT_CHARACTERISTIC_( CURRENT_RELATIVE_HUMIDITY, 0 );
 
 
 ETSTimer fan_timer;
@@ -119,7 +109,35 @@ void fanOff() {
 }
 
 
-void process_temperature(float temp) {
+void update_state();
+
+
+void on_update(homekit_characteristic_t *ch, homekit_value_t value, void *context) {
+    update_state();
+}
+
+
+homekit_characteristic_t current_temperature = HOMEKIT_CHARACTERISTIC_(
+    CURRENT_TEMPERATURE, 0
+);
+homekit_characteristic_t target_temperature  = HOMEKIT_CHARACTERISTIC_(
+    TARGET_TEMPERATURE, 22, .callback=HOMEKIT_CHARACTERISTIC_CALLBACK(on_update)
+);
+homekit_characteristic_t units = HOMEKIT_CHARACTERISTIC_(TEMPERATURE_DISPLAY_UNITS, 0);
+homekit_characteristic_t current_state = HOMEKIT_CHARACTERISTIC_(CURRENT_HEATING_COOLING_STATE, 0);
+homekit_characteristic_t target_state = HOMEKIT_CHARACTERISTIC_(
+    TARGET_HEATING_COOLING_STATE, 0, .callback=HOMEKIT_CHARACTERISTIC_CALLBACK(on_update)
+);
+homekit_characteristic_t cooling_threshold = HOMEKIT_CHARACTERISTIC_(
+    COOLING_THRESHOLD_TEMPERATURE, 25, .callback=HOMEKIT_CHARACTERISTIC_CALLBACK(on_update)
+);
+homekit_characteristic_t heating_threshold = HOMEKIT_CHARACTERISTIC_(
+    HEATING_THRESHOLD_TEMPERATURE, 15, .callback=HOMEKIT_CHARACTERISTIC_CALLBACK(on_update)
+);
+homekit_characteristic_t current_humidity = HOMEKIT_CHARACTERISTIC_(CURRENT_RELATIVE_HUMIDITY, 0);
+
+
+void update_state() {
     uint8_t state = target_state.value.int_value;
     if ((state == 1 && current_temperature.value.float_value < target_temperature.value.float_value) ||
             (state == 3 && current_temperature.value.float_value < heating_threshold.value.float_value)) {
@@ -157,8 +175,7 @@ void process_temperature(float temp) {
 
 
 void temperature_sensor_task(void *_args) {
-    gpio_enable(LED_PIN, GPIO_OUTPUT);
-    gpio_write(LED_PIN, 0);
+    sdk_os_timer_setfn(&fan_timer, fan_alarm, NULL);
 
     gpio_set_pullup(TEMPERATURE_SENSOR_PIN, false, false);
 
@@ -184,7 +201,7 @@ void temperature_sensor_task(void *_args) {
             homekit_characteristic_notify(&current_temperature, current_temperature.value);
             homekit_characteristic_notify(&current_humidity, current_humidity.value);
 
-            process_temperature(temperature_value);
+            update_state();
         } else {
             printf("Couldnt read data from sensor\n");
         }
@@ -194,7 +211,6 @@ void temperature_sensor_task(void *_args) {
 }
 
 void thermostat_init() {
-    sdk_os_timer_setfn(&fan_timer, fan_alarm, NULL);
     xTaskCreate(temperature_sensor_task, "Thermostat", 256, NULL, 2, NULL);
 }
 
