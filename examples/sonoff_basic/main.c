@@ -24,6 +24,7 @@
 #include <stdio.h>
 #include <espressif/esp_wifi.h>
 #include <espressif/esp_sta.h>
+#include <espressif/esp_common.h>
 #include <esp/uart.h>
 #include <esp8266.h>
 #include <FreeRTOS.h>
@@ -33,16 +34,17 @@
 #include <homekit/characteristics.h>
 #include <wifi_config.h>
 
+#include "button.h"
+
 // The GPIO pin that is connected to the relay on the Sonoff Basic.
 const int relay_gpio = 12;
 // The GPIO pin that is connected to the LED on the Sonoff Basic.
 const int led_gpio = 13;
 // The GPIO pin that is oconnected to the button on the Sonoff Basic.
 const int button_gpio = 0;
-// The minimum amount that has to occur between each button press.
-const uint16_t button_event_debounce_time = 100 / portTICK_PERIOD_MS;
-// The last time the button was pressed, in ticks.
-uint32_t last_button_event_time;
+
+void switch_on_callback(homekit_characteristic_t *_ch, homekit_value_t on, void *context);
+void button_callback(uint8_t gpio, button_event_t event);
 
 void relay_write(bool on) {
     gpio_write(relay_gpio, on ? 1 : 0);
@@ -52,9 +54,38 @@ void led_write(bool on) {
     gpio_write(led_gpio, on ? 0 : 1);
 }
 
-void switch_on_callback(homekit_characteristic_t *_ch, homekit_value_t on, void *context);
+void reset_configuration_task() {
+    //Flash the LED first before we start the reset
+    for (int i=0; i<3; i++) {
+        led_write(true);
+        vTaskDelay(100 / portTICK_PERIOD_MS);
+        led_write(false);
+        vTaskDelay(100 / portTICK_PERIOD_MS);
+    }
+    
+    printf("Resetting Wifi Config\n");
+    
+    wifi_config_reset();
+    
+    vTaskDelay(1000 / portTICK_PERIOD_MS);
+    
+    printf("Resetting HomeKit Config\n");
+    
+    homekit_server_reset();
+    
+    vTaskDelay(1000 / portTICK_PERIOD_MS);
+    
+    printf("Restarting\n");
+    
+    sdk_system_restart();
+    
+    vTaskDelete(NULL);
+}
 
-void button_intr_callback(uint8_t gpio);
+void reset_configuration() {
+    printf("Resetting Sonoff configuration\n");
+    xTaskCreate(reset_configuration_task, "Reset configuration", 256, NULL, 2, NULL);
+}
 
 homekit_characteristic_t switch_on = HOMEKIT_CHARACTERISTIC_(
     ON, false, .callback=HOMEKIT_CHARACTERISTIC_CALLBACK(switch_on_callback)
@@ -65,27 +96,25 @@ void gpio_init() {
     led_write(false);
     gpio_enable(relay_gpio, GPIO_OUTPUT);
     relay_write(switch_on.value.bool_value);
-    
-    gpio_set_pullup(button_gpio, true, true);
-    gpio_set_interrupt(button_gpio, GPIO_INTTYPE_EDGE_ANY, button_intr_callback);
 }
 
 void switch_on_callback(homekit_characteristic_t *_ch, homekit_value_t on, void *context) {
     relay_write(switch_on.value.bool_value);
 }
 
-void button_intr_callback(uint8_t gpio) {
-    uint32_t now = xTaskGetTickCountFromISR();
-    if ((now - last_button_event_time) < button_event_debounce_time) {
-        // debounce time, ignore events
-        return;
-    }
-    last_button_event_time = now;
-    if (gpio_read(button_gpio) != 1) {
-        //Toggle the Sonoff when the built-in push button is pressed
-        switch_on.value.bool_value = !switch_on.value.bool_value;
-        relay_write(switch_on.value.bool_value);
-        homekit_characteristic_notify(&switch_on, switch_on.value);
+void button_callback(uint8_t gpio, button_event_t event) {
+    switch (event) {
+        case button_event_single_press:
+            printf("Toggling relay\n");
+            switch_on.value.bool_value = !switch_on.value.bool_value;
+            relay_write(switch_on.value.bool_value);
+            homekit_characteristic_notify(&switch_on, switch_on.value);
+            break;
+        case button_event_long_press:
+            reset_configuration();
+            break;
+        default:
+            printf("Unknown button event: %d\n", event);
     }
 }
 
@@ -164,4 +193,8 @@ void user_init(void) {
     
     wifi_config_init("sonoff-switch", NULL, on_wifi_ready);
     gpio_init();
+
+    if (button_create(button_gpio, 0, 4000, button_callback)) {
+        printf("Failed to initialize button\n");
+    }
 }
