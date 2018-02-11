@@ -1,7 +1,7 @@
 PROGRAM = sonoff_basic
 
 # Set to true to use the hardcoded wifi configuration in wifi.h
-HARDCODE_WIFI = true
+HARDCODE_WIFI = false
 
 EXTRA_COMPONENTS = \
 	extras/http-parser \
