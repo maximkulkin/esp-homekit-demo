@@ -1,12 +1,22 @@
 PROGRAM = sonoff_basic
 
+# Set to true to use the hardcoded wifi configuration in wifi.h
+HARDCODE_WIFI = true
+
 EXTRA_COMPONENTS = \
 	extras/http-parser \
-	extras/dhcpserver \
-	$(abspath ../../components/wifi_config) \
 	$(abspath ../../components/wolfssl) \
 	$(abspath ../../components/cJSON) \
 	$(abspath ../../components/homekit)
+
+ifeq "$(HARDCODE_WIFI)" "true"
+	EXTRA_CFLAGS += -DHARDCODE_WIFI
+else
+	EXTRA_COMPONENTS = \
+		extras/dhcpserver \
+		$(abspath ../../components/wifi_config)
+endif
+
 
 FLASH_SIZE = 8
 FLASH_MODE = dout
