@@ -1,0 +1,1 @@
+Very rough hack of sonoff_basic to include toggle on GPIO14
