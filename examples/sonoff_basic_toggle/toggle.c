@@ -44,7 +44,7 @@ void toggle_intr_callback(uint8_t gpio) {
     if (gpio_read(toggle->gpio_num) != toggle->state) {
         // different state = toggled
         toggle->state = gpio_read(toggle->gpio_num);
-        toggle->callback(toggle->gpio_num, toggle_event);
+        toggle->callback(toggle->gpio_num);
     }
 }
 
