@@ -25,7 +25,6 @@
  updated HomeKit identify pulses to be heartbeat timing
  added toggle switch via toggle.c based on button.c
  enabled GPIO14 as input and use as toggle
- updated ../../components/wifi-config/content/index.html to be pretty
  */
 
 #include <stdio.h>
@@ -55,7 +54,7 @@ const int button_gpio = 0;
 #include "toggle.h"
 // The GPIO pin that is connected to the header on the Sonoff Basic (external switch).
 const int toggle_gpio = 14;
-void toggle_callback(uint8_t gpio, toggle_event_t event);
+void toggle_callback(uint8_t gpio);
 //
 
 
@@ -130,17 +129,11 @@ void button_callback(uint8_t gpio, button_event_t event) {
 
 
 // NEW
-void toggle_callback(uint8_t gpio, toggle_event_t event) {
-    switch (event) {
-        case toggle_event:
+void toggle_callback(uint8_t gpio) {
             printf("Toggling relay due to switch at GPIO %2d\n", gpio);
             switch_on.value.bool_value = !switch_on.value.bool_value;
             relay_write(switch_on.value.bool_value);
             homekit_characteristic_notify(&switch_on, switch_on.value);
-            break;
-        default:
-            printf("Unknown switch event: %d\n", event);
-    }
 }
 //
 
