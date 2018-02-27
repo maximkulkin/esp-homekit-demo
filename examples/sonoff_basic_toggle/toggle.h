@@ -1,10 +1,8 @@
 #pragma once
 
-typedef enum {
-    toggle_event,
-} toggle_event_t;
 
-typedef void (*toggle_callback_fn)(uint8_t gpio_num, toggle_event_t event);
+
+typedef void (*toggle_callback_fn)(uint8_t gpio_num);
 
 /** 
     Starts monitoring the given GPIO pin for change of state. Events are recieved through the callback.
