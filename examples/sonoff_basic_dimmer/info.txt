@@ -1,0 +1,7 @@
+Modification of sonoff_basic_toggle example with PWM dimming as implemented in rtos example.
+
+IMPORTANT: This is a proof of concept demonstration and should NOT be modified to attempt to control AC via PWM directly to the relay or by swapping out the relay for TRIAC!
+
+The correct approach is to drive a separate daughter board with a TRIAC and zero-crossing detection circuit. The zero crossing detection facilitates synchronise of the PWM with the AC to stop flickering. Google "ac dimming"
+
+
