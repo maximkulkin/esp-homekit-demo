@@ -48,7 +48,6 @@ const int button_gpio = 0;
 // The GPIO pin that is connected to the header on the Sonoff Basic (external switch).
 const int toggle_gpio = 14;
 
-//NEW
 #include <pwm.h>
 // The PWM pin that is connected to the PWM daughter board.
 const int pwm_gpio = 13;
@@ -73,14 +72,13 @@ void reset_configuration_task() {
         led_write(false);
         vTaskDelay(100 / portTICK_PERIOD_MS);
     }
-    /*
     printf("Resetting Wifi Config\n");
     wifi_config_reset();
     vTaskDelay(1000 / portTICK_PERIOD_MS);
     printf("Resetting HomeKit Config\n");
     homekit_server_reset();
     vTaskDelay(1000 / portTICK_PERIOD_MS);
-    */
+     
     printf("Restarting\n");
     sdk_system_restart();
     vTaskDelete(NULL);
@@ -260,8 +258,8 @@ homekit_accessory_t *accessories[] = {
 
 homekit_server_config_t config = {
     .accessories = accessories,
-//  .password = "190-11-978"    //valid for release
-    .password = "111-11-111"    //easy for testing
+    .password = "190-11-978"    //valid for release
+//    .password = "111-11-111"    //easy for testing
 };
 
 void on_wifi_ready() {
@@ -286,9 +284,11 @@ void user_init(void) {
     uart_set_baud(0, 115200);
     create_accessory_name();
 
-    wifi_init();                                                    //testing
+/*
+    wifi_init();                                                   //testing
     homekit_server_init(&config);                                  //testing
-    //wifi_config_init("Sonoff Dimmer", NULL, on_wifi_ready);       //release
+ */
+    wifi_config_init("Sonoff Dimmer", NULL, on_wifi_ready);        //release
     
     gpio_init();
     light_init();
