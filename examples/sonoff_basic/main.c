@@ -32,7 +32,12 @@
 
 #include <homekit/homekit.h>
 #include <homekit/characteristics.h>
+
+#ifdef HARDCODE_WIFI
+#include "wifi.h"
+#else
 #include <wifi_config.h>
+#endif
 
 #include "button.h"
 
@@ -63,9 +68,11 @@ void reset_configuration_task() {
         vTaskDelay(100 / portTICK_PERIOD_MS);
     }
     
+#ifndef HARDCODE_WIFI
     printf("Resetting Wifi Config\n");
     
     wifi_config_reset();
+#endif
     
     vTaskDelay(1000 / portTICK_PERIOD_MS);
     
@@ -173,6 +180,19 @@ void on_wifi_ready() {
     homekit_server_init(&config);
 }
 
+#ifdef HARDCODE_WIFI
+static void wifi_init() {
+    struct sdk_station_config wifi_config = {
+        .ssid = WIFI_SSID,
+        .password = WIFI_PASSWORD,
+    };
+
+    sdk_wifi_set_opmode(STATION_MODE);
+    sdk_wifi_station_set_config(&wifi_config);
+    sdk_wifi_station_connect();
+}
+#endif
+
 void create_accessory_name() {
     uint8_t macaddr[6];
     sdk_wifi_get_macaddr(STATION_IF, macaddr);
@@ -191,8 +211,17 @@ void user_init(void) {
 
     create_accessory_name();
     
+#ifdef HARDCODE_WIFI
+    wifi_init();
+#else
     wifi_config_init("sonoff-switch", NULL, on_wifi_ready);
+#endif
+
     gpio_init();
+
+#ifdef HARDCODE_WIFI
+    on_wifi_ready();
+#endif
 
     if (button_create(button_gpio, 0, 4000, button_callback)) {
         printf("Failed to initialize button\n");
