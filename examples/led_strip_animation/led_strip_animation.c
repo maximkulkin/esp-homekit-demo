@@ -30,14 +30,14 @@
 
 // Global variables
 float led_hue = 0;              // hue is scaled 0 to 360
-float led_saturation = 59;      // saturation is scaled 0 to 100
-float led_brightness = 100;     // brightness is scaled 0 to 100
+float led_saturation = 100;      // saturation is scaled 0 to 100
+float led_brightness = 33;     // brightness is scaled 0 to 100
 bool led_on = false;            // on is boolean on or off
 bool led_on_value = (bool)0;                // this is the value to write to GPIO for led on (0 = GPIO low)
 
 float fx_hue = 0;              // hue is scaled 0 to 360
-float fx_saturation = 0;      // saturation is scaled 0 to 100
-float fx_brightness = 50 / portTICK_PERIOD_MS;     // brightness is scaled 0 to 100
+float fx_saturation = 50;      // saturation is scaled 0 to 100
+float fx_brightness = 43 / portTICK_PERIOD_MS;     // brightness is scaled 0 to 100
 bool fx_on = false;
 
 //http://blog.saikoled.com/post/44677718712/how-to-convert-from-hsi-to-rgb-white
@@ -77,17 +77,6 @@ static void hsi2rgb(float h, float s, float i, ws2812_pixel_t* rgb) {
     rgb->white = (uint8_t) 0;           // white channel is not used
 }
 
-void led_string_set(void) {	
-    if (led_on) {
-        // set the inbuilt led
-        gpio_write(LED_INBUILT_GPIO, (int)led_on_value);
-    }
-    else {
-        // printf("off\n");
-        gpio_write(LED_INBUILT_GPIO, 1 - (int)led_on_value);
-    }
-}
-
 static void wifi_init() {
     struct sdk_station_config wifi_config = {
         .ssid = WIFI_SSID,
@@ -111,7 +100,6 @@ void led_identify_task(void *_args) {
         vTaskDelay(250 / portTICK_PERIOD_MS);
     }
 
-    led_string_set();
     vTaskDelete(NULL);
 }
 
@@ -131,7 +119,6 @@ void led_on_set(homekit_value_t value) {
     }
 
     led_on = value.bool_value;
-    led_string_set();
 	
 	if (led_on) {
 	  	WS2812FX_start();
@@ -149,12 +136,7 @@ void led_brightness_set(homekit_value_t value) {
         return;
     }
     led_brightness = value.int_value;
-    led_string_set();
 	
-	ws2812_pixel_t rgb = { { 0, 0, 0, 0 } };
-    hsi2rgb(led_hue, led_saturation, led_brightness, &rgb);
-	
-	WS2812FX_setColor(rgb.red, rgb.green, rgb.blue);
 	WS2812FX_setBrightness((uint8_t)led_brightness*2.55);
 }
 
@@ -168,10 +150,9 @@ void led_hue_set(homekit_value_t value) {
         return;
     }
     led_hue = value.float_value;
-    led_string_set();
     
 	ws2812_pixel_t rgb = { { 0, 0, 0, 0 } };
-    hsi2rgb(led_hue, led_saturation, led_brightness, &rgb);
+    hsi2rgb(led_hue, led_saturation, 100, &rgb);
 	
 	WS2812FX_setColor(rgb.red, rgb.green, rgb.blue);
 }
@@ -186,10 +167,9 @@ void led_saturation_set(homekit_value_t value) {
         return;
     }
     led_saturation = value.float_value;
-    led_string_set();
 	
 	ws2812_pixel_t rgb = { { 0, 0, 0, 0 } };
-    hsi2rgb(led_hue, led_saturation, led_brightness, &rgb);
+    hsi2rgb(led_hue, led_saturation, 100, &rgb);
 	
 	WS2812FX_setColor(rgb.red, rgb.green, rgb.blue);
 }
@@ -204,7 +184,6 @@ void fx_on_set(homekit_value_t value) {
         return;
     }
     fx_on = value.bool_value;
-    led_string_set();
 	
 	if (fx_on) {
 		WS2812FX_setMode360(fx_hue);
@@ -224,7 +203,6 @@ void fx_brightness_set(homekit_value_t value) {
     }
     fx_brightness = value.int_value;
 
-    led_string_set();
 	WS2812FX_setSpeed((uint8_t)fx_brightness*2.55);
 }
 
@@ -239,7 +217,6 @@ void fx_hue_set(homekit_value_t value) {
     }
     fx_hue = value.float_value;
 	
-    led_string_set();
 	WS2812FX_setMode360(fx_hue);
 }
 
@@ -252,9 +229,7 @@ void fx_saturation_set(homekit_value_t value) {
         // printf("Invalid hue-value format: %d\n", value.format);
         return;
     }
-    fx_saturation = value.float_value;
-	
-    led_string_set();
+    fx_saturation = value.float_value;	
 }
 
 homekit_characteristic_t name = HOMEKIT_CHARACTERISTIC_(NAME, "Chihiro");

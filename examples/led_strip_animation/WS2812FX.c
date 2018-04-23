@@ -59,11 +59,15 @@ CHANGELOG
 uint8_t _mode_index = DEFAULT_MODE;
 uint8_t _speed = DEFAULT_SPEED;
 uint8_t _brightness = DEFAULT_BRIGHTNESS;
+uint8_t _target_brightness = DEFAULT_BRIGHTNESS;
 bool _running = false;
+
 uint16_t _led_count = LED_COUNT;
-uint32_t _mode_delay = 100;
+
 uint32_t _color = DEFAULT_COLOR;
 uint32_t _mode_color = DEFAULT_COLOR;
+
+uint32_t _mode_delay = 100;
 uint32_t _counter_mode_call = 0;
 uint32_t _counter_mode_step = 0;
 uint32_t _mode_last_call_time = 0;
@@ -141,7 +145,6 @@ void WS2812FX_init() {
 	ws2812_i2s_init(LED_COUNT, PIXEL_RGB);
 	
 	WS2812FX_initModes();
-	WS2812FX_setBrightness(_brightness);
 	WS2812_clear();
 	
 	xTaskCreate(WS2812FX_service, "fxService", 200, NULL, 2, NULL);
@@ -151,15 +154,22 @@ void WS2812FX_service(void *_args) {
 	uint32_t now = 0;
 	
 	while (true) {
-		now = xTaskGetTickCount() * portTICK_PERIOD_MS;
-
-		if(now - _mode_last_call_time > _mode_delay) {
-			if(_running) {
+		if(_running) {
+			if (_brightness < _target_brightness) {
+				_brightness++;
 				CALL_MODE(_mode_index);
+			} else if (_brightness > _target_brightness) {
+				_brightness--;
+				CALL_MODE(_mode_index);
+			}
+		
+			now = xTaskGetTickCount() * portTICK_PERIOD_MS;
+			if(now - _mode_last_call_time > _mode_delay) {
 				_counter_mode_call++;
 				_mode_last_call_time = now;
+				CALL_MODE(_mode_index);
 				
-	            gpio_toggle(LED_INBUILT_GPIO);
+				gpio_toggle(LED_INBUILT_GPIO);
 			}  
 		}
 		vTaskDelay(33 / portTICK_PERIOD_MS);
@@ -167,6 +177,7 @@ void WS2812FX_service(void *_args) {
 }
 
 void WS2812FX_start() {
+	_brightness = 0;
 	_counter_mode_call = 0;
 	_counter_mode_step = 0;
 	_running = true;
@@ -209,8 +220,7 @@ void WS2812FX_setColor32(uint32_t c) {
 }
 
 void WS2812FX_setBrightness(uint8_t b) {
-	_brightness = constrain(b, BRIGHTNESS_MIN, BRIGHTNESS_MAX);
-	CALL_MODE(_mode_index);
+	_target_brightness = constrain(b, BRIGHTNESS_MIN, BRIGHTNESS_MAX);
 }
 
 bool WS2812FX_isRunning() {
