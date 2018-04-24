@@ -4,16 +4,11 @@ WS2812FX.cpp - Library for WS2812 LED effects.
 Harm Aldick - 2016
 www.aldick.org
 
+Ported to esp-open-rtos by PCSaito - 2018
+www.github.com/pcsaito
 
 FEATURES
 * A lot of blinken modes and counting
-* WS2812FX can be used as drop-in replacement for Adafruit Neopixel Library
-
-NOTES
-* Uses the Adafruit Neopixel library. Get it here:
-https://github.com/adafruit/Adafruit_NeoPixel
-
-
 
 LICENSE
 
@@ -45,13 +40,11 @@ CHANGELOG
 2016-05-28   Initial beta release
 2016-06-03   Code cleanup, minor improvements, new modes
 2016-06-04   2 new fx, fixed setColor (now also resets _mode_color)
-2017-02-02   added external trigger functionality (e.g. for sound-to-light)
 2017-02-02   removed "blackout" on mode, speed or color-change
-
+2018-04-24   ported to esp-open-rtos to use in esp-homekit-demo
 */
 
 #include "WS2812FX.h"
-#include "esp/hwrand.h"
 #include <math.h>
 
 #define CALL_MODE(n) _mode[n]();
@@ -62,7 +55,7 @@ uint8_t _brightness = 0;
 uint8_t _target_brightness = 0;
 bool _running = false;
 
-uint16_t _led_count = LED_COUNT;
+uint16_t _led_count = 0;
 
 uint32_t _color = DEFAULT_COLOR;
 uint32_t _mode_color = DEFAULT_COLOR;
@@ -76,7 +69,7 @@ uint8_t get_random_wheel_index(uint8_t);
 
 mode _mode[MODE_COUNT];
 
-ws2812_pixel_t pixels[LED_COUNT];
+ws2812_pixel_t *pixels;
 
 //Helpers
 uint32_t pixel32(uint8_t r, uint8_t g, uint8_t b) {
@@ -130,24 +123,29 @@ uint32_t WS2812_getPixelColor(uint16_t n) {
 }
 
 void WS2812_clear() {
-	for (int i = 0; i < LED_COUNT; i++) {
+	for (int i = 0; i < _led_count; i++) {
 		WS2812_setPixelColor(i, 0, 0, 0);
 	}
 	ws2812_i2s_update(pixels, PIXEL_RGB);
 }
 
-//Lib
-void WS2812FX_init() {
-	xTaskCreate(WS2812FX_service, "fxService", 200, NULL, 2, NULL);
+void WS2812_init(uint16_t pixel_count) {
+	_led_count = pixel_count;
+    pixels = (ws2812_pixel_t*) malloc(_led_count * sizeof(ws2812_pixel_t));
 	
 	// initialise the onboard led as a secondary indicator (handy for testing)
 	gpio_enable(LED_INBUILT_GPIO, GPIO_OUTPUT);
 
 	// initialise the LED strip
-	ws2812_i2s_init(LED_COUNT, PIXEL_RGB);
+	ws2812_i2s_init(_led_count, PIXEL_RGB);
 	
 	WS2812_clear();
-	
+}
+
+//Lib
+void WS2812FX_init(uint16_t pixel_count) {
+	WS2812_init(pixel_count);
+	xTaskCreate(WS2812FX_service, "fxService", 200, NULL, 2, NULL);
 	WS2812FX_initModes();
 	WS2812FX_start();
 }
@@ -158,9 +156,12 @@ void WS2812FX_service(void *_args) {
 	while (true) {
 		if(_running) {
 			//printf("_brightness : _target_brightness %ld : %ld \n", _brightness, _target_brightness);
-		
-			float filter = 0.9;
-			_brightness = (filter * _brightness) + ((1.0-filter) * _target_brightness);
+			
+			if ((_brightness < 15) && (_brightness < _target_brightness)) {
+				_brightness++;
+			} else {
+				_brightness = (BRIGHTNESS_FILTER * _brightness) + ((1.0-BRIGHTNESS_FILTER) * _target_brightness);
+			}
 		
 			now = xTaskGetTickCount() * portTICK_PERIOD_MS;
 			if(now - _mode_last_call_time > _mode_delay) {
@@ -168,7 +169,7 @@ void WS2812FX_service(void *_args) {
 				_mode_last_call_time = now;
 				CALL_MODE(_mode_index);
 				
-				gpio_toggle(LED_INBUILT_GPIO);
+				//gpio_toggle(LED_INBUILT_GPIO); //led indicator
 			}  
 		}
 		vTaskDelay(33 / portTICK_PERIOD_MS);
@@ -618,7 +619,7 @@ void WS2812FX_mode_twinkle(void) {
 		WS2812FX_strip_off();
 		uint32_t min_leds = max(1, _led_count/5); // make sure, at least one LED is on
 		uint32_t max_leds = max(1, _led_count/2); // make sure, at least one LED is on
-		_counter_mode_step = randomInRange(min_leds, min_leds);
+		_counter_mode_step = randomInRange(min_leds, max_leds);
 	}
 
 	WS2812_setPixelColor32(randomInRange(0, _led_count), _mode_color);

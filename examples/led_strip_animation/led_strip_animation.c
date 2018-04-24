@@ -27,6 +27,7 @@
 #include "WS2812FX.h"
 
 #define LED_RGB_SCALE 255       // this is the scaling factor used for color conversion
+#define LED_COUNT 43            // this is the number of WS2812B leds on the strip
 
 // Global variables
 float led_hue = 0;              // hue is scaled 0 to 360
@@ -100,6 +101,7 @@ void led_identify_task(void *_args) {
         vTaskDelay(250 / portTICK_PERIOD_MS);
     }
 
+    gpio_write(LED_INBUILT_GPIO, 1 - (int)led_on_value);
     vTaskDelete(NULL);
 }
 
@@ -319,6 +321,6 @@ void user_init(void) {
     name.value = HOMEKIT_STRING(name_value);
 
     wifi_init();
-    WS2812FX_init();
+    WS2812FX_init(LED_COUNT);
     homekit_server_init(&config);
 }

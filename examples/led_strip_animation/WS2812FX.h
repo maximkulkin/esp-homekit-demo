@@ -3,12 +3,15 @@ WS2812FX.h - Library for WS2812 LED effects.
 
 Harm Aldick - 2016
 www.aldick.org
+
+Ported to esp-open-rtos by PCSaito - 2018
+www.github.com/pcsaito
+
+
 FEATURES
 * A lot of blinken modes and counting
-* WS2812FX can be used as drop-in replacement for Adafruit Neopixel Library
-NOTES
-* Uses the Adafruit Neopixel library. Get it here:
-https://github.com/adafruit/Adafruit_NeoPixel
+
+
 LICENSE
 The MIT License (MIT)
 Copyright (c) 2016  Harm Aldick
@@ -31,7 +34,7 @@ CHANGELOG
 2016-05-28   Initial beta release
 2016-06-03   Code cleanup, minor improvements, new modes
 2016-06-04   2 new fx, fixed setColor (now also resets _mode_color)
-2017-02-02   added external trigger functionality (e.g. for sound-to-light)
+2018-04-24   ported to esp-open-rtos to use in esp-homekit-demo
 */
 
 #ifndef WS2812FX_h
@@ -41,7 +44,6 @@ CHANGELOG
 #include "ws2812_i2s/ws2812_i2s.h"
 
 #define LED_INBUILT_GPIO 2      // this is the onboard LED used to show on/off only
-#define LED_COUNT 43            // this is the number of WS2812B leds on the strip
 
 #define DEFAULT_MODE 9
 #define DEFAULT_SPEED 1
@@ -52,6 +54,7 @@ CHANGELOG
 
 #define BRIGHTNESS_MIN 0
 #define BRIGHTNESS_MAX 255
+#define BRIGHTNESS_FILTER 0.9
 
 #define MODE_COUNT 54
 
@@ -113,7 +116,7 @@ CHANGELOG
 typedef void (*mode)(void);
   
 void
-	WS2812FX_init(void),
+	WS2812FX_init(uint16_t pixel_count),
 	WS2812FX_initModes(void),
 	WS2812FX_service(void *_args),
 	WS2812FX_start(void),
