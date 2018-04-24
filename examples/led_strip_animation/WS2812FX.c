@@ -58,8 +58,8 @@ CHANGELOG
 
 uint8_t _mode_index = DEFAULT_MODE;
 uint8_t _speed = DEFAULT_SPEED;
-uint8_t _brightness = DEFAULT_BRIGHTNESS;
-uint8_t _target_brightness = DEFAULT_BRIGHTNESS;
+uint8_t _brightness = 0;
+uint8_t _target_brightness = 0;
 bool _running = false;
 
 uint16_t _led_count = LED_COUNT;
@@ -138,16 +138,18 @@ void WS2812_clear() {
 
 //Lib
 void WS2812FX_init() {
+	xTaskCreate(WS2812FX_service, "fxService", 200, NULL, 2, NULL);
+	
 	// initialise the onboard led as a secondary indicator (handy for testing)
 	gpio_enable(LED_INBUILT_GPIO, GPIO_OUTPUT);
 
 	// initialise the LED strip
 	ws2812_i2s_init(LED_COUNT, PIXEL_RGB);
 	
-	WS2812FX_initModes();
 	WS2812_clear();
 	
-	xTaskCreate(WS2812FX_service, "fxService", 200, NULL, 2, NULL);
+	WS2812FX_initModes();
+	WS2812FX_start();
 }
 
 void WS2812FX_service(void *_args) {
@@ -155,13 +157,10 @@ void WS2812FX_service(void *_args) {
 	
 	while (true) {
 		if(_running) {
-			if (_brightness < _target_brightness) {
-				_brightness++;
-				CALL_MODE(_mode_index);
-			} else if (_brightness > _target_brightness) {
-				_brightness--;
-				CALL_MODE(_mode_index);
-			}
+			//printf("_brightness : _target_brightness %ld : %ld \n", _brightness, _target_brightness);
+		
+			float filter = 0.9;
+			_brightness = (filter * _brightness) + ((1.0-filter) * _target_brightness);
 		
 			now = xTaskGetTickCount() * portTICK_PERIOD_MS;
 			if(now - _mode_last_call_time > _mode_delay) {
@@ -177,7 +176,6 @@ void WS2812FX_service(void *_args) {
 }
 
 void WS2812FX_start() {
-	_brightness = 0;
 	_counter_mode_call = 0;
 	_counter_mode_step = 0;
 	_running = true;
@@ -185,11 +183,12 @@ void WS2812FX_start() {
 
 void WS2812FX_stop() {
 	_running = false;
-	WS2812FX_strip_off();
 }
 
 void WS2812FX_setMode360(float m) {
+	//printf("WS2812FX_setMode360: %f", m);
 	uint8_t mode = map((uint16_t)m, 0, 360, 0, MODE_COUNT-1);
+	//printf("WS2812FX_setMode: %d", mode);
 	WS2812FX_setMode(mode);
 }
 
@@ -198,7 +197,6 @@ void WS2812FX_setMode(uint8_t m) {
 	_counter_mode_step = 0;
 	_mode_index = constrain(m, 0, MODE_COUNT-1);
 	_mode_color = _color;
-	WS2812FX_setBrightness(_brightness);
 }
 
 void WS2812FX_setSpeed(uint8_t s) {
@@ -216,11 +214,16 @@ void WS2812FX_setColor32(uint32_t c) {
 	_counter_mode_call = 0;
 	_counter_mode_step = 0;
 	_mode_color = _color;
-	WS2812FX_setBrightness(_brightness);
 }
 
 void WS2812FX_setBrightness(uint8_t b) {
 	_target_brightness = constrain(b, BRIGHTNESS_MIN, BRIGHTNESS_MAX);
+	//printf("WS2812FX_setBrightness: %ld \n", _target_brightness);
+}
+
+void WS2812FX_forceBrightness(uint8_t b) {
+	_target_brightness = constrain(b, BRIGHTNESS_MIN, BRIGHTNESS_MAX);
+	_brightness = _target_brightness;
 }
 
 bool WS2812FX_isRunning() {
@@ -236,7 +239,7 @@ uint8_t WS2812FX_getSpeed(void) {
 }
 
 uint8_t WS2812FX_getBrightness(void) {
-	return _brightness;
+	return _target_brightness;
 }
 
 uint16_t WS2812FX_getLength(void) {
@@ -445,7 +448,7 @@ void WS2812FX_mode_breath(void) {
 		WS2812_setPixelColor32(i, _color);           // set all LEDs to selected color
 	}
 	int b = map(breath_brightness, 0, 255, 0, _brightness);  // keep brightness below brightness set by user
-	WS2812FX_setBrightness(b);                     // set new brightness to leds
+	WS2812FX_forceBrightness(b);                     // set new brightness to leds
 	WS2812_show();
 
 	_mode_color = breath_brightness;                         // we use _mode_color to store the brightness
@@ -464,7 +467,7 @@ void WS2812FX_mode_fade(void) {
 	int b = _counter_mode_step - 127;
 	b = 255 - (abs(b) * 2);
 	b = map(b, 0, 255, min(25, _brightness), _brightness);
-	WS2812FX_setBrightness(b);
+	WS2812FX_forceBrightness(b);
 	WS2812_show();
 
 	_counter_mode_step = (_counter_mode_step + 1) % 256;

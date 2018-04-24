@@ -43,10 +43,9 @@ CHANGELOG
 #define LED_INBUILT_GPIO 2      // this is the onboard LED used to show on/off only
 #define LED_COUNT 43            // this is the number of WS2812B leds on the strip
 
-#define DEFAULT_BRIGHTNESS 50
-#define DEFAULT_MODE 0
-#define DEFAULT_SPEED 150
-#define DEFAULT_COLOR 0xFF0000
+#define DEFAULT_MODE 9
+#define DEFAULT_SPEED 1
+#define DEFAULT_COLOR 0xFF10EE
 
 #define SPEED_MIN 1
 #define SPEED_MAX 255

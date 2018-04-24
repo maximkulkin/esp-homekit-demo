@@ -35,10 +35,10 @@ float led_brightness = 33;     // brightness is scaled 0 to 100
 bool led_on = false;            // on is boolean on or off
 bool led_on_value = (bool)0;                // this is the value to write to GPIO for led on (0 = GPIO low)
 
-float fx_hue = 0;              // hue is scaled 0 to 360
+float fx_hue = 64;              // hue is scaled 0 to 360
 float fx_saturation = 50;      // saturation is scaled 0 to 100
-float fx_brightness = 43 / portTICK_PERIOD_MS;     // brightness is scaled 0 to 100
-bool fx_on = false;
+float fx_brightness = 1;     // brightness is scaled 0 to 100
+bool fx_on = true;
 
 //http://blog.saikoled.com/post/44677718712/how-to-convert-from-hsi-to-rgb-white
 static void hsi2rgb(float h, float s, float i, ws2812_pixel_t* rgb) {
@@ -121,15 +121,17 @@ void led_on_set(homekit_value_t value) {
     led_on = value.bool_value;
 	
 	if (led_on) {
-	  	WS2812FX_start();
+		WS2812FX_setBrightness((uint8_t)floor(led_brightness*2.55));
+		
 	} else {
-	  	WS2812FX_stop();
+		WS2812FX_setBrightness(0);
 	}
 }
 
 homekit_value_t led_brightness_get() {
     return HOMEKIT_INT(led_brightness);
 }
+
 void led_brightness_set(homekit_value_t value) {
     if (value.format != homekit_format_int) {
         // printf("Invalid brightness-value format: %d\n", value.format);
@@ -137,7 +139,7 @@ void led_brightness_set(homekit_value_t value) {
     }
     led_brightness = value.int_value;
 	
-	WS2812FX_setBrightness((uint8_t)led_brightness*2.55);
+	WS2812FX_setBrightness((uint8_t)floor(led_brightness*2.55));
 }
 
 homekit_value_t led_hue_get() {
