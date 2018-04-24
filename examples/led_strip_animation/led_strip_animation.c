@@ -24,7 +24,7 @@
 #include <homekit/characteristics.h>
 #include "wifi.h"
 
-#include "WS2812FX.h"
+#include "WS2812FX/WS2812FX.h"
 
 #define LED_RGB_SCALE 255       // this is the scaling factor used for color conversion
 #define LED_COUNT 43            // this is the number of WS2812B leds on the strip
@@ -102,6 +102,7 @@ void led_identify_task(void *_args) {
     }
 
     gpio_write(LED_INBUILT_GPIO, 1 - (int)led_on_value);
+
     vTaskDelete(NULL);
 }
 
