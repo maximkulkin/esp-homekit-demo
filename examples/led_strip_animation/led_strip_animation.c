@@ -207,8 +207,16 @@ void fx_brightness_set(homekit_value_t value) {
         return;
     }
     fx_brightness = value.int_value;
-
-	WS2812FX_setSpeed((uint8_t)fx_brightness*2.55);
+	
+	if (fx_brightness > 50) {
+		uint8_t fx_speed = fx_brightness - 50;
+		WS2812FX_setSpeed(fx_speed*5.1);
+		WS2812FX_setInverted(true);
+	} else {
+		uint8_t fx_speed = abs(fx_brightness - 51);
+		WS2812FX_setSpeed(fx_speed*5.1);
+		WS2812FX_setInverted(false);
+	}
 }
 
 homekit_value_t fx_hue_get() {
