@@ -28,6 +28,7 @@
 
 #define LED_RGB_SCALE 255       // this is the scaling factor used for color conversion
 #define LED_COUNT 43            // this is the number of WS2812B leds on the strip
+#define LED_INBUILT_GPIO 2      // this is the onboard LED used to show on/off only
 
 // Global variables
 float led_hue = 0;              // hue is scaled 0 to 360
@@ -38,7 +39,7 @@ bool led_on_value = (bool)0;                // this is the value to write to GPI
 
 float fx_hue = 64;              // hue is scaled 0 to 360
 float fx_saturation = 50;      // saturation is scaled 0 to 100
-float fx_brightness = 1;     // brightness is scaled 0 to 100
+float fx_brightness = 50;     // brightness is scaled 0 to 100
 bool fx_on = true;
 
 //http://blog.saikoled.com/post/44677718712/how-to-convert-from-hsi-to-rgb-white
@@ -91,6 +92,9 @@ static void wifi_init() {
 
 
 void led_identify_task(void *_args) {
+	// initialise the onboard led as a secondary indicator (handy for testing)
+	gpio_enable(LED_INBUILT_GPIO, GPIO_OUTPUT);
+	
     for (int i = 0; i < 3; i++) {
         for (int j = 0; j < 3; j++) {
             gpio_write(LED_INBUILT_GPIO, (int)led_on_value);
@@ -332,4 +336,6 @@ void user_init(void) {
     wifi_init();
     WS2812FX_init(LED_COUNT);
     homekit_server_init(&config);
+	
+	led_identify(HOMEKIT_INT(led_brightness));
 }
