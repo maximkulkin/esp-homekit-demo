@@ -3,7 +3,8 @@
 *
 * NOTE:
 *    1) the ws2812_i2s library uses hardware I2S so output pin is GPIO3 and cannot be changed.
-*    2) on some ESP8266 such as the Wemos D1 mini, GPIO3 is the same pin used for serial comms.
+*    2) on some ESP8266 such as the Wemos D1 mini, GPIO3 is the same pin used for serial comms (RX pin).
+*	 3) you can still print stuff to serial but transmiting data to wemos will interfere on the leds output
 * 
 * Debugging printf statements are disabled below because of note (2) - you can uncomment
 * them if your hardware supports serial comms that do not conflict with I2S on GPIO3.
