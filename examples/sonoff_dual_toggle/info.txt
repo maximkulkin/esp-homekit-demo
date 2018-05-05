@@ -1,0 +1,4 @@
+Modification of sonoff_basic to address Sonoff dual R2
+Implement two homekit characteristics
+Change state via button or via Toggle on headers
+Note button is NOT GPIO0 

@@ -1,0 +1,7 @@
+Modification of sonoff_basic_toggle example with PWM dimming as implemented in eps-open-rtos/examples/pwm_test.c
+
+IMPORTANT: This is a proof of concept demonstration and should NOT be modified to attempt to control AC directly via PWM to the relay or by swapping out the relay for TRIAC!
+
+Indirect approach needed to dim AC i.e. via separate daughter board with a TRIAC and zero-crossing detection circuit. Zero crossing detection facilitates synchronise of the PWM with the AC to stop flickering. Google "ac dimming" for more information.
+
+
