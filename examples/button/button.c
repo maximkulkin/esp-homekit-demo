@@ -126,7 +126,7 @@ void button_delete(const uint8_t gpio_num) {
 
     if (button) {
         sdk_os_timer_disarm(&button->press_timer);
-        gpio_set_interrupt(BUTTON_PIN, GPIO_INTTYPE_EDGE_ANY, NULL);
+        gpio_set_interrupt(button->gpio_num, GPIO_INTTYPE_EDGE_ANY, NULL);
     }
 }
 

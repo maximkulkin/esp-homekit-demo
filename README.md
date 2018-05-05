@@ -33,7 +33,12 @@ make -C examples/led all
 ```shell
 export ESPPORT=/dev/tty.SLAB_USBtoUART
 ```
-9. Upload firmware to ESP:
+9. To prevent any effects from previous firmware (e.g. firmware crashing right at
+   start), highly recommend to erase flash:
+```shell
+    make -C examples/led erase_flash
+```
+10. Upload firmware to ESP:
 ```shell
     make -C examples/led test
 ```
