@@ -183,9 +183,9 @@ void temperature_sensor_task(void *_args) {
     gpio_enable(HEATER_PIN, GPIO_OUTPUT);
     gpio_enable(COOLER_PIN, GPIO_OUTPUT);
 
-    gpio_write(FAN_PIN, true);
-    gpio_write(HEATER_PIN, true);
-    gpio_write(COOLER_PIN, true);
+    fanOff();
+    heaterOff();
+    coolerOff();
 
     float humidity_value, temperature_value;
     while (1) {
