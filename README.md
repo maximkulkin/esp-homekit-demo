@@ -24,6 +24,11 @@ git submodule update --init --recursive
     ```shell
     export HOMEKIT_DEBUG=1
     ```
+    3. Depending on your device, it might be required to change the flash mode:
+    ```shell
+    export FLASH_MODE=dout
+    ```
+    (see issue #80)
 7. Build example:
 ```shell
 make -C examples/led all
