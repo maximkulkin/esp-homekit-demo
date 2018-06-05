@@ -4,11 +4,17 @@
 * NOTE:
 *    1) the ws2812_i2s library uses hardware I2S so output pin is GPIO3 and cannot be changed.
 *    2) on some ESP8266 such as the Wemos D1 mini, GPIO3 is the same pin used for serial comms.
-* 
+*
 * Debugging printf statements are disabled below because of note (2) - you can uncomment
 * them if your hardware supports serial comms that do not conflict with I2S on GPIO3.
 *
+* When accessory starts, it creates it's own WiFi AP "LED-XXXXXX"
+* (where XXXXXX is last 3 digits of accessory's mac address in HEX).
+* You will be presented with available WiFi networks to connect to.
+* Accessory shuts down AP after successful connection.
+*
 * Contributed March 2018 by https://github.com/Dave1001
+* Contributed June 2018 by https://github.com/idumzaes
 */
 #include <stdio.h>
 #include <stdlib.h>
@@ -19,15 +25,24 @@
 #include <FreeRTOS.h>
 #include <task.h>
 #include <math.h>
-
 #include <homekit/homekit.h>
 #include <homekit/characteristics.h>
-#include "wifi.h"
+#include <wifi_config.h>
 #include "ws2812_i2s/ws2812_i2s.h"
+
+//HomeKit Variables - Start
+#define dev_name "LED Lamp"             //Device name
+#define dev_modl "ESP LED Controller"   //Device model
+#define dev_mfg "zaes"                  //Device manufacturer
+#define dev_sn "001"                    //Device serial number
+#define dev_fw "0.1"                    //Firmware Revision
+
+#define pair_key "111-11-111"           //HomeKit Pairing Key
+//HomeKit Variables - End
 
 #define LED_ON 0                // this is the value to write to GPIO for led on (0 = GPIO low)
 #define LED_INBUILT_GPIO 2      // this is the onboard LED used to show on/off only
-#define LED_COUNT 16            // this is the number of WS2812B leds on the strip
+#define LED_COUNT 7             // this is the number of WS2812B leds on the strip
 #define LED_RGB_SCALE 255       // this is the scaling factor used for color conversion
 
 // Global variables
@@ -100,19 +115,8 @@ void led_string_set(void) {
         gpio_write(LED_INBUILT_GPIO, 1 - LED_ON);
     }
 
-    // write out the new color 
+    // write out the new color
     led_string_fill(rgb);
-}
-
-static void wifi_init() {
-    struct sdk_station_config wifi_config = {
-        .ssid = WIFI_SSID,
-        .password = WIFI_PASSWORD,
-    };
-
-    sdk_wifi_set_opmode(STATION_MODE);
-    sdk_wifi_station_set_config(&wifi_config);
-    sdk_wifi_station_connect();
 }
 
 void led_init() {
@@ -203,21 +207,21 @@ void led_saturation_set(homekit_value_t value) {
     led_string_set();
 }
 
-homekit_characteristic_t name = HOMEKIT_CHARACTERISTIC_(NAME, "Sample LED Strip");
+homekit_characteristic_t name = HOMEKIT_CHARACTERISTIC_(NAME, dev_name);
 
 homekit_accessory_t *accessories[] = {
     HOMEKIT_ACCESSORY(.id = 1, .category = homekit_accessory_category_lightbulb, .services = (homekit_service_t*[]) {
         HOMEKIT_SERVICE(ACCESSORY_INFORMATION, .characteristics = (homekit_characteristic_t*[]) {
             &name,
-            HOMEKIT_CHARACTERISTIC(MANUFACTURER, "Generic"),
-            HOMEKIT_CHARACTERISTIC(SERIAL_NUMBER, "037A2BABF19D"),
-            HOMEKIT_CHARACTERISTIC(MODEL, "LEDStrip"),
-            HOMEKIT_CHARACTERISTIC(FIRMWARE_REVISION, "0.1"),
+            HOMEKIT_CHARACTERISTIC(MANUFACTURER, dev_mfg),
+            HOMEKIT_CHARACTERISTIC(SERIAL_NUMBER, dev_sn),
+            HOMEKIT_CHARACTERISTIC(MODEL, dev_modl),
+            HOMEKIT_CHARACTERISTIC(FIRMWARE_REVISION, dev_fw),
             HOMEKIT_CHARACTERISTIC(IDENTIFY, led_identify),
             NULL
         }),
         HOMEKIT_SERVICE(LIGHTBULB, .primary = true, .characteristics = (homekit_characteristic_t*[]) {
-            HOMEKIT_CHARACTERISTIC(NAME, "Sample LED Strip"),
+            HOMEKIT_CHARACTERISTIC(NAME, dev_name),
             HOMEKIT_CHARACTERISTIC(
                 ON, true,
                 .getter = led_on_get,
@@ -247,8 +251,12 @@ homekit_accessory_t *accessories[] = {
 
 homekit_server_config_t config = {
     .accessories = accessories,
-    .password = "111-11-111"
+    .password = pair_key
 };
+
+void on_wifi_ready() {
+    homekit_server_init(&config);
+}
 
 void user_init(void) {
     // uart_set_baud(0, 115200);
@@ -258,12 +266,11 @@ void user_init(void) {
     // accessory name suffix.
     uint8_t macaddr[6];
     sdk_wifi_get_macaddr(STATION_IF, macaddr);
-    int name_len = snprintf(NULL, 0, "Sample LED Strip-%02X%02X%02X", macaddr[3], macaddr[4], macaddr[5]);
+    int name_len = snprintf(NULL, 0, "LED-%02X%02X%02X", macaddr[3], macaddr[4], macaddr[5]);
     char *name_value = malloc(name_len + 1);
-    snprintf(name_value, name_len + 1, "Sample LED Strip-%02X%02X%02X", macaddr[3], macaddr[4], macaddr[5]);
+    snprintf(name_value, name_len + 1, "LED-%02X%02X%02X", macaddr[3], macaddr[4], macaddr[5]);
     name.value = HOMEKIT_STRING(name_value);
 
-    wifi_init();
+    wifi_config_init(dev_name, NULL, on_wifi_ready);
     led_init();
-    homekit_server_init(&config);
 }
