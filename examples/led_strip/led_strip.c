@@ -194,6 +194,29 @@ void led_saturation_set(homekit_value_t value) {
     led_string_set();
 }
 
+void reset_configuration_task() {
+    //Flash the LED first before we start the reset
+    for (int i=0; i<3; i++) {
+        led_on_set(true);
+        vTaskDelay(100 / portTICK_PERIOD_MS);
+        led_on_set(false);
+        vTaskDelay(100 / portTICK_PERIOD_MS);
+    }
+    printf("Resetting Wifi Config\n");
+    wifi_config_reset();
+    vTaskDelay(1000 / portTICK_PERIOD_MS);
+    printf("Resetting HomeKit Config\n");
+    homekit_server_reset();
+    vTaskDelay(1000 / portTICK_PERIOD_MS);
+    printf("Restarting\n");
+    sdk_system_restart();
+    vTaskDelete(NULL);
+}
+
+void reset_configuration() {
+    printf("Resetting Sonoff configuration\n");
+    xTaskCreate(reset_configuration_task, "Reset configuration", 256, NULL, 2, NULL);
+}
 
 homekit_characteristic_t button_event = HOMEKIT_CHARACTERISTIC_(PROGRAMMABLE_SWITCH_EVENT, 0);
 
@@ -208,8 +231,7 @@ void button_callback(uint8_t gpio, button_event_t event) {
             homekit_characteristic_notify(&button_event, HOMEKIT_UINT8(1));
             break;
         case button_event_long_press:
-            printf("long press\n");
-            homekit_characteristic_notify(&button_event, HOMEKIT_UINT8(2));
+            reset_configuration();
             break;
         default:
             printf("unknown button event: %d\n", event);
