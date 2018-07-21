@@ -8,13 +8,7 @@
 * Debugging printf statements are disabled below because of note (2) - you can uncomment
 * them if your hardware supports serial comms that do not conflict with I2S on GPIO3.
 *
-* When accessory starts, it creates it's own WiFi AP "LED-XXXXXX"
-* (where XXXXXX is last 3 digits of accessory's mac address in HEX).
-* You will be presented with available WiFi networks to connect to.
-* Accessory shuts down AP after successful connection.
-*
 * Contributed March 2018 by https://github.com/Dave1001
-* Contributed June 2018 by https://github.com/idumzaes
 */
 #include <stdio.h>
 #include <stdlib.h>
@@ -25,24 +19,16 @@
 #include <FreeRTOS.h>
 #include <task.h>
 #include <math.h>
+#include "button.h"
+
 #include <homekit/homekit.h>
 #include <homekit/characteristics.h>
 #include <wifi_config.h>
 #include "ws2812_i2s/ws2812_i2s.h"
 
-//HomeKit Variables - Start
-#define dev_name "LED Lamp"             //Device name
-#define dev_modl "ESP LED Controller"   //Device model
-#define dev_mfg "zaes"                  //Device manufacturer
-#define dev_sn "001"                    //Device serial number
-#define dev_fw "0.1"                    //Firmware Revision
-
-#define pair_key "111-11-111"           //HomeKit Pairing Key
-//HomeKit Variables - End
-
 #define LED_ON 0                // this is the value to write to GPIO for led on (0 = GPIO low)
 #define LED_INBUILT_GPIO 2      // this is the onboard LED used to show on/off only
-#define LED_COUNT 7             // this is the number of WS2812B leds on the strip
+#define LED_COUNT 16            // this is the number of WS2812B leds on the strip
 #define LED_RGB_SCALE 255       // this is the scaling factor used for color conversion
 
 // Global variables
@@ -50,6 +36,7 @@ float led_hue = 0;              // hue is scaled 0 to 360
 float led_saturation = 59;      // saturation is scaled 0 to 100
 float led_brightness = 100;     // brightness is scaled 0 to 100
 bool led_on = false;            // on is boolean on or off
+const int button_gpio = 0;      // Button GPIO pin number
 ws2812_pixel_t pixels[LED_COUNT];
 
 //http://blog.saikoled.com/post/44677718712/how-to-convert-from-hsi-to-rgb-white
@@ -207,25 +194,48 @@ void led_saturation_set(homekit_value_t value) {
     led_string_set();
 }
 
-homekit_characteristic_t name = HOMEKIT_CHARACTERISTIC_(NAME, dev_name);
+
+homekit_characteristic_t button_event = HOMEKIT_CHARACTERISTIC_(PROGRAMMABLE_SWITCH_EVENT, 0);
+
+void button_callback(uint8_t gpio, button_event_t event) {
+    switch (event) {
+        case button_event_single_press:
+            printf("single press\n");
+            homekit_characteristic_notify(&button_event, HOMEKIT_UINT8(0));
+            break;
+        case button_event_double_press:
+            printf("double press\n");
+            homekit_characteristic_notify(&button_event, HOMEKIT_UINT8(1));
+            break;
+        case button_event_long_press:
+            printf("long press\n");
+            homekit_characteristic_notify(&button_event, HOMEKIT_UINT8(2));
+            break;
+        default:
+            printf("unknown button event: %d\n", event);
+    }
+}
+
+homekit_characteristic_t name = HOMEKIT_CHARACTERISTIC_(NAME, "Sample LED Strip");
 
 homekit_accessory_t *accessories[] = {
     HOMEKIT_ACCESSORY(.id = 1, .category = homekit_accessory_category_lightbulb, .services = (homekit_service_t*[]) {
         HOMEKIT_SERVICE(ACCESSORY_INFORMATION, .characteristics = (homekit_characteristic_t*[]) {
             &name,
-            HOMEKIT_CHARACTERISTIC(MANUFACTURER, dev_mfg),
-            HOMEKIT_CHARACTERISTIC(SERIAL_NUMBER, dev_sn),
-            HOMEKIT_CHARACTERISTIC(MODEL, dev_modl),
-            HOMEKIT_CHARACTERISTIC(FIRMWARE_REVISION, dev_fw),
+            HOMEKIT_CHARACTERISTIC(MANUFACTURER, "Generic"),
+            HOMEKIT_CHARACTERISTIC(SERIAL_NUMBER, "037A2BABF19D"),
+            HOMEKIT_CHARACTERISTIC(MODEL, "LEDStrip"),
+            HOMEKIT_CHARACTERISTIC(FIRMWARE_REVISION, "0.1"),
             HOMEKIT_CHARACTERISTIC(IDENTIFY, led_identify),
             NULL
         }),
         HOMEKIT_SERVICE(LIGHTBULB, .primary = true, .characteristics = (homekit_characteristic_t*[]) {
-            HOMEKIT_CHARACTERISTIC(NAME, dev_name),
+            HOMEKIT_CHARACTERISTIC(NAME, "Sample LED Strip"),
             HOMEKIT_CHARACTERISTIC(
                 ON, true,
                 .getter = led_on_get,
                 .setter = led_on_set
+                &button_event,
             ),
             HOMEKIT_CHARACTERISTIC(
                 BRIGHTNESS, 100,
@@ -251,7 +261,7 @@ homekit_accessory_t *accessories[] = {
 
 homekit_server_config_t config = {
     .accessories = accessories,
-    .password = pair_key
+    .password = "111-11-111"
 };
 
 void on_wifi_ready() {
@@ -266,11 +276,14 @@ void user_init(void) {
     // accessory name suffix.
     uint8_t macaddr[6];
     sdk_wifi_get_macaddr(STATION_IF, macaddr);
-    int name_len = snprintf(NULL, 0, "LED-%02X%02X%02X", macaddr[3], macaddr[4], macaddr[5]);
+    int name_len = snprintf(NULL, 0, "LED Lamp-%02X%02X%02X", macaddr[3], macaddr[4], macaddr[5]);
     char *name_value = malloc(name_len + 1);
-    snprintf(name_value, name_len + 1, "LED-%02X%02X%02X", macaddr[3], macaddr[4], macaddr[5]);
+    snprintf(name_value, name_len + 1, "LED Lamp-%02X%02X%02X", macaddr[3], macaddr[4], macaddr[5]);
     name.value = HOMEKIT_STRING(name_value);
 
-    wifi_config_init(dev_name, NULL, on_wifi_ready);
+    wifi_config_init("my-accessory", NULL, on_wifi_ready);
     led_init();
+
+    if (button_create(button_gpio, 0, 4000, button_callback)) {
+        printf("Failed to initialize button\n");
 }
