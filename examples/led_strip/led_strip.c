@@ -14,6 +14,7 @@
 #include <stdlib.h>
 #include <espressif/esp_wifi.h>
 #include <espressif/esp_sta.h>
+#include <espressif/esp_common.h>
 #include <esp/uart.h>
 #include <esp8266.h>
 #include <FreeRTOS.h>
@@ -36,7 +37,7 @@ float led_hue = 0;              // hue is scaled 0 to 360
 float led_saturation = 59;      // saturation is scaled 0 to 100
 float led_brightness = 100;     // brightness is scaled 0 to 100
 bool led_on = false;            // on is boolean on or off
-const int button_gpio = 0;      // Button GPIO pin number
+const int reset_gpio = 0;      // Reset Button GPIO pin
 ws2812_pixel_t pixels[LED_COUNT];
 
 //http://blog.saikoled.com/post/44677718712/how-to-convert-from-hsi-to-rgb-white
@@ -197,9 +198,9 @@ void led_saturation_set(homekit_value_t value) {
 void reset_configuration_task() {
     //Flash the LED first before we start the reset
     for (int i=0; i<3; i++) {
-        led_on_set(true);
+        gpio_write(LED_INBUILT_GPIO, LED_ON);
         vTaskDelay(100 / portTICK_PERIOD_MS);
-        led_on_set(false);
+        gpio_write(LED_INBUILT_GPIO, 1 - LED_ON);
         vTaskDelay(100 / portTICK_PERIOD_MS);
     }
     printf("Resetting Wifi Config\n");
@@ -222,14 +223,6 @@ homekit_characteristic_t button_event = HOMEKIT_CHARACTERISTIC_(PROGRAMMABLE_SWI
 
 void button_callback(uint8_t gpio, button_event_t event) {
     switch (event) {
-        case button_event_single_press:
-            printf("single press\n");
-            homekit_characteristic_notify(&button_event, HOMEKIT_UINT8(0));
-            break;
-        case button_event_double_press:
-            printf("double press\n");
-            homekit_characteristic_notify(&button_event, HOMEKIT_UINT8(1));
-            break;
         case button_event_long_press:
             reset_configuration();
             break;
@@ -257,7 +250,6 @@ homekit_accessory_t *accessories[] = {
                 ON, true,
                 .getter = led_on_get,
                 .setter = led_on_set
-                &button_event,
             ),
             HOMEKIT_CHARACTERISTIC(
                 BRIGHTNESS, 100,
@@ -306,6 +298,7 @@ void user_init(void) {
     wifi_config_init("my-accessory", NULL, on_wifi_ready);
     led_init();
 
-    if (button_create(button_gpio, 0, 4000, button_callback)) {
+    if (button_create(reset_gpio, button_callback)) {
         printf("Failed to initialize button\n");
+      }
 }
