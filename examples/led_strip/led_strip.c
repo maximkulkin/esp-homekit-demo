@@ -37,7 +37,7 @@ float led_hue = 0;              // hue is scaled 0 to 360
 float led_saturation = 59;      // saturation is scaled 0 to 100
 float led_brightness = 100;     // brightness is scaled 0 to 100
 bool led_on = false;            // on is boolean on or off
-const int reset_gpio = 0;      // Reset Button GPIO pin
+const int button_gpio = 0;      // Button GPIO pin - Click On/Off, 30s Hold Reset
 ws2812_pixel_t pixels[LED_COUNT];
 
 //http://blog.saikoled.com/post/44677718712/how-to-convert-from-hsi-to-rgb-white
@@ -197,10 +197,14 @@ void led_saturation_set(homekit_value_t value) {
 
 void reset_configuration_task() {
   //Flash the LED first before we start the reset
+  const ws2812_pixel_t COLOR_PINK = { { 255, 0, 127, 0 } };
+  const ws2812_pixel_t COLOR_BLACK = { { 0, 0, 0, 0 } };
   for (int i=0; i<3; i++) {
     gpio_write(LED_INBUILT_GPIO, LED_ON);
+    led_string_fill(COLOR_PINK);
     vTaskDelay(100 / portTICK_PERIOD_MS);
     gpio_write(LED_INBUILT_GPIO, 1 - LED_ON);
+    led_string_fill(COLOR_BLACK);
     vTaskDelay(100 / portTICK_PERIOD_MS);
   }
   printf("Resetting Wifi Config\n");
@@ -219,19 +223,19 @@ void reset_configuration() {
   xTaskCreate(reset_configuration_task, "Reset configuration", 256, NULL, 2, NULL);
 }
 
-homekit_characteristic_t button_event = HOMEKIT_CHARACTERISTIC_(PROGRAMMABLE_SWITCH_EVENT, 0);
 homekit_characteristic_t lightbulb_on = HOMEKIT_CHARACTERISTIC_(ON, false, .getter=led_on_get, .setter=led_on_set);
 
 void button_callback(uint8_t gpio, button_event_t event) {
   switch (event) {
     case button_event_single_press:
-      printf("Toggling lightbulb due to button at GPIO %2d\n", gpio);
+      printf("GPIO %2d - Toggling light\n", gpio);
       lightbulb_on.value.bool_value = !lightbulb_on.value.bool_value;
       led_on = lightbulb_on.value.bool_value;
       led_string_set();
       homekit_characteristic_notify(&lightbulb_on, lightbulb_on.value);
       break;
     case button_event_long_press:
+      printf("GPIO %2d - Reset Triggered\n", gpio);
       reset_configuration();
       break;
     default:
@@ -239,6 +243,7 @@ void button_callback(uint8_t gpio, button_event_t event) {
   }
 }
 
+homekit_characteristic_t button_event = HOMEKIT_CHARACTERISTIC_(PROGRAMMABLE_SWITCH_EVENT, 0);
 homekit_characteristic_t name = HOMEKIT_CHARACTERISTIC_(NAME, "Sample LED Strip");
 
 homekit_accessory_t *accessories[] = {
@@ -283,7 +288,7 @@ homekit_accessory_t *accessories[] = {
 
 homekit_server_config_t config = {
   .accessories = accessories,
-  .password = "111-11-111"
+  .password = "111-92-111"
 };
 
 void on_wifi_ready() {
@@ -303,10 +308,10 @@ void user_init(void) {
   snprintf(name_value, name_len + 1, "LED Lamp-%02X%02X%02X", macaddr[3], macaddr[4], macaddr[5]);
   name.value = HOMEKIT_STRING(name_value);
 
-  wifi_config_init("my-accessory", NULL, on_wifi_ready);
+  wifi_config_init("LED Lamp-", NULL, on_wifi_ready);
   led_init();
 
-  if (button_create(reset_gpio, button_callback)) {
+  if (button_create(button_gpio, 0, 4000, button_callback)) {
     printf("Failed to initialize button\n");
   }
 }
