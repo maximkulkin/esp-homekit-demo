@@ -1,9 +1,11 @@
-PROGRAM = led_strip
+PROGRAM = led_strip_button
 
 EXTRA_COMPONENTS = \
 	extras/http-parser \
 	extras/i2s_dma \
 	extras/ws2812_i2s \
+	extras/dhcpserver \
+	$(abspath ../../components/wifi_config) \
 	$(abspath ../../components/wolfssl) \
 	$(abspath ../../components/cJSON) \
 	$(abspath ../../components/homekit)
@@ -20,4 +22,3 @@ LIBS += m
 
 monitor:
 	$(FILTEROUTPUT) --port $(ESPPORT) --baud 115200 --elf $(PROGRAM_OUT)
-
