@@ -4,7 +4,8 @@
 * NOTE:
 *    1) the ws2812_i2s library uses hardware I2S so output pin is GPIO3 and cannot be changed.
 *    2) on some ESP8266 such as the Wemos D1 mini, GPIO3 is the same pin used for serial comms.
-*
+*    3) Toggle button can be placed on GPIO0. Click to toggle on/off. Hold to reset config.
+
 * Debugging printf statements are disabled below because of note (2) - you can uncomment
 * them if your hardware supports serial comms that do not conflict with I2S on GPIO3.
 *
