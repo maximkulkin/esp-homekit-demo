@@ -11,6 +11,7 @@
 *
 * Contributed March 2018 by https://github.com/Dave1001
 */
+#include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <espressif/esp_wifi.h>
@@ -244,14 +245,26 @@ void button_callback(uint8_t gpio, button_event_t event) {
   }
 }
 
-homekit_characteristic_t button_event = HOMEKIT_CHARACTERISTIC_(PROGRAMMABLE_SWITCH_EVENT, 0);
 homekit_characteristic_t name = HOMEKIT_CHARACTERISTIC_(NAME, "Sample LED Strip");
+homekit_characteristic_t button_event = HOMEKIT_CHARACTERISTIC_(PROGRAMMABLE_SWITCH_EVENT, 0);
+homekit_characteristic_t ne = HOMEKIT_CHARACTERISTIC_(MANUFACTURER, NULL);
+
+
+static void get_ip(void){
+  static char ip[16];
+  ip[0] = 0;
+  struct ip_info ipinfo;
+  (void)
+  sdk_wifi_get_ip_info(STATION_IF, &ipinfo);
+  snprintf(ip, sizeof(ip), IPSTR, IP2STR(&ipinfo.ip));
+  ne.value.string_value = strdup(ip);
+}
 
 homekit_accessory_t *accessories[] = {
   HOMEKIT_ACCESSORY(.id = 1, .category = homekit_accessory_category_lightbulb, .services = (homekit_service_t*[]) {
     HOMEKIT_SERVICE(ACCESSORY_INFORMATION, .characteristics = (homekit_characteristic_t*[]) {
       &name,
-      HOMEKIT_CHARACTERISTIC(MANUFACTURER, "Generic"),
+      &ne,
       HOMEKIT_CHARACTERISTIC(SERIAL_NUMBER, "037A2BABF19D"),
       HOMEKIT_CHARACTERISTIC(MODEL, "LEDStrip"),
       HOMEKIT_CHARACTERISTIC(FIRMWARE_REVISION, "0.1"),
@@ -293,6 +306,7 @@ homekit_server_config_t config = {
 };
 
 void on_wifi_ready() {
+  get_ip();
   homekit_server_init(&config);
 }
 
