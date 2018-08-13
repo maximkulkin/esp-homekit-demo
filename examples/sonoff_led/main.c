@@ -40,15 +40,15 @@ modified to do pulse-width-modulation (PWM) of LED
 #include "button.h"
 
 // The GPIO pin that is connected to the LED on the Sonoff Basic.
-const int warm_led_pin = 14;
-const int cold_led_pin = 12;
 // The GPIO pin that is connected to the button on the Sonoff Basic.
 const int button_gpio = 0;
 
 float warm_bri;
 float cold_bri;
 bool on;
-uint8_t pins[] = {warm_led_pin, cold_led_pin};
+//const int warm_led_pin = 14;
+//const int cold_led_pin = 12;
+uint8_t pins[] = {14, 12};
 uint32_t duties[] = {0, 0};
 pwm_info_t pwm_info;
 
