@@ -243,7 +243,7 @@ homekit_accessory_t *accessories[] = {
                 HOMEKIT_CHARACTERISTIC(NAME, "Sonoff Led"),
                 &lightbulb_on,
                 HOMEKIT_CHARACTERISTIC(BRIGHTNESS, 100, .getter=light_cold_bri_get, .setter=light_cold_bri_set),
-                HOMEKIT_CHARACTERISTIC(COLOR_TEMPERATURE, 0, .getter=light_warm_bri_get, .setter=light_warm_bri_set),
+                HOMEKIT_CHARACTERISTIC(SATURATION, 0, .getter=light_warm_bri_get, .setter=light_warm_bri_set),
             NULL
         }),
         NULL
