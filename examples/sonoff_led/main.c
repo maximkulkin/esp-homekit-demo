@@ -108,7 +108,7 @@ void gpio_init() {
 
 void lightSET_task(void *pvParameters) {
     if (on) {
-        duties[0] = (UINT16_MAX*warm_bri/100);
+        duties[0] = (UINT16_MAX*((int)warm_bri)/100);
         duties[1] = (UINT16_MAX*cold_bri/100);
         printf("ON, warm: %3d [%5d], cold: %3d [%5d]\n", (int)warm_bri , duties[0], (int)cold_bri , duties[1]);
     } else {
@@ -146,7 +146,7 @@ void light_on_set(homekit_value_t value) {
     lightSET();
 }
 
-homekit_value_t light_warm_bri_get() { return HOMEKIT_INT(warm_bri); }
+homekit_value_t light_warm_bri_get() { return HOMEKIT_FLOAT(warm_bri); }
 homekit_value_t light_cold_bri_get() { return HOMEKIT_INT(cold_bri); }
 
 void light_warm_bri_set(homekit_value_t value) {
@@ -154,7 +154,7 @@ void light_warm_bri_set(homekit_value_t value) {
         printf("Invalid bri-value format: %d\n", value.format);
         return;
     }
-    warm_bri = value.int_value;
+    warm_bri = value.float_value;
     lightSET();
 }
 
