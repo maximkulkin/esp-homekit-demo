@@ -108,7 +108,7 @@ void gpio_init() {
 
 void lightSET_task(void *pvParameters) {
     if (on) {
-        duties[0] = (UINT16_MAX*((int)warm_bri)/100);
+        duties[0] = (UINT16_MAX*warm_bri/100);
         duties[1] = (UINT16_MAX*cold_bri/100);
         printf("ON, warm: %3d [%5d], cold: %3d [%5d]\n", (int)warm_bri , duties[0], (int)cold_bri , duties[1]);
     } else {
@@ -245,7 +245,7 @@ homekit_accessory_t *accessories[] = {
                 HOMEKIT_CHARACTERISTIC(BRIGHTNESS, 100, .getter=light_cold_bri_get, .setter=light_cold_bri_set),
             NULL
         }),
-        HOMEKIT_SERVICE(LIGHTBULB, .primary=true,
+        HOMEKIT_SERVICE(LIGHTBULB,
             .characteristics=(homekit_characteristic_t*[]){
                 HOMEKIT_CHARACTERISTIC(NAME, "Warm light"),
                 &lightbulb_on,
