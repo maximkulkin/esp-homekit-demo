@@ -45,7 +45,8 @@ const int button_gpio = 0;
 
 float warm_bri;
 float cold_bri;
-bool on;
+bool warm_on;
+bool cold_on;
 //const int warm_led_pin = 14;
 //const int cold_led_pin = 12;
 uint8_t pins[] = {14, 12};
@@ -107,15 +108,8 @@ void gpio_init() {
 
 
 void lightSET_task(void *pvParameters) {
-    if (on) {
-        duties[0] = (UINT16_MAX*warm_bri/100);
-        duties[1] = (UINT16_MAX*cold_bri/100);
-        printf("ON, warm: %3d [%5d], cold: %3d [%5d]\n", (int)warm_bri , duties[0], (int)cold_bri , duties[1]);
-    } else {
-        printf("OFF\n");
-        duties[0] = 0;
-        duties[1] = 0;
-    }
+    duties[0] = warm_on ? (UINT16_MAX*warm_bri/100) : 0;
+    duties[1] = cold_on ? (UINT16_MAX*cold_bri/100) : 0;
     multipwm_set_task();
     vTaskDelete(NULL);
 }
@@ -128,21 +122,31 @@ void lightSET() {
 
 void light_init() {
     printf("light_init:\n");
-    on=false;
+    warm_on=false;
+    cold_on=false;
     warm_bri=0;
     cold_bri=0;
     lightSET();
 }
 
 
-homekit_value_t light_on_get() { return HOMEKIT_BOOL(on); }
+homekit_value_t warm_light_on_get() { return HOMEKIT_BOOL(warm_on); }
+homekit_value_t cold_light_on_get() { return HOMEKIT_BOOL(cold_on); }
 
-void light_on_set(homekit_value_t value) {
+void warm_light_on_set(homekit_value_t value) {
     if (value.format != homekit_format_bool) {
         printf("Invalid on-value format: %d\n", value.format);
         return;
     }
-    on = value.bool_value;
+    warm_on = value.bool_value;
+    lightSET();
+}
+void cold_light_on_set(homekit_value_t value) {
+    if (value.format != homekit_format_bool) {
+        printf("Invalid on-value format: %d\n", value.format);
+        return;
+    }
+    cold_on = value.bool_value;
     lightSET();
 }
 
@@ -202,17 +206,21 @@ void light_identify(homekit_value_t _value) {
 
 homekit_characteristic_t name = HOMEKIT_CHARACTERISTIC_(NAME, "Sonoff Led");
 
-homekit_characteristic_t lightbulb_on = HOMEKIT_CHARACTERISTIC_(ON, true, .getter=light_on_get, .setter=light_on_set);
+homekit_characteristic_t warm_light_on = HOMEKIT_CHARACTERISTIC_(ON, true, .getter=warm_light_on_get, .setter=warm_light_on_set);
+homekit_characteristic_t cold_light_on = HOMEKIT_CHARACTERISTIC_(ON, true, .getter=cold_light_on_get, .setter=cold_light_on_set);
 
 
 void button_callback(uint8_t gpio, button_event_t event) {
     switch (event) {
         case button_event_single_press:
             printf("Toggling lightbulb due to button at GPIO %2d\n", gpio);
-            lightbulb_on.value.bool_value = !lightbulb_on.value.bool_value;
-            on = lightbulb_on.value.bool_value;
+            warm_light_on.value.bool_value = !warm_light_on.value.bool_value;
+            warm_on = warm_light_on.value.bool_value;
+            cold_light_on.value.bool_value = !cold_light_on.value.bool_value;
+            cold_on = cold_light_on.value.bool_value;
             lightSET();
-            homekit_characteristic_notify(&lightbulb_on, lightbulb_on.value);
+            homekit_characteristic_notify(&warm_light_on, warm_light_on.value);
+            homekit_characteristic_notify(&cold_light_on, cold_light_on.value);
             break;
         case button_event_long_press:
             printf("Reseting WiFi configuration!\n");
@@ -241,15 +249,15 @@ homekit_accessory_t *accessories[] = {
         HOMEKIT_SERVICE(LIGHTBULB, .primary=true,
             .characteristics=(homekit_characteristic_t*[]){
                 HOMEKIT_CHARACTERISTIC(NAME, "Cold light"),
-                &lightbulb_on,
+                &cold_light_on,
                 HOMEKIT_CHARACTERISTIC(BRIGHTNESS, 100, .getter=light_cold_bri_get, .setter=light_cold_bri_set),
             NULL
         }),
         HOMEKIT_SERVICE(LIGHTBULB,
             .characteristics=(homekit_characteristic_t*[]){
                 HOMEKIT_CHARACTERISTIC(NAME, "Warm light"),
-                &lightbulb_on,
-                HOMEKIT_CHARACTERISTIC(BRIGHTNESS, 0, .getter=light_warm_bri_get, .setter=light_warm_bri_set),
+                &warm_light_on,
+                HOMEKIT_CHARACTERISTIC(BRIGHTNESS, 100, .getter=light_warm_bri_get, .setter=light_warm_bri_set),
             NULL
         }),
         NULL
