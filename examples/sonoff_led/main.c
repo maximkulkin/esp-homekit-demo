@@ -146,21 +146,21 @@ void light_on_set(homekit_value_t value) {
     lightSET();
 }
 
-homekit_value_t light_warm_bri_get() { return HOMEKIT_FLOAT(warm_bri); }
+homekit_value_t light_warm_bri_get() { return HOMEKIT_INT(warm_bri); }
 homekit_value_t light_cold_bri_get() { return HOMEKIT_INT(cold_bri); }
 
 void light_warm_bri_set(homekit_value_t value) {
     if (value.format != homekit_format_int) {
-        printf("Invalid bri-value format: %d\n", value.format);
+        printf("Invalid warm-value format: %d\n", value.format);
         return;
     }
-    warm_bri = value.float_value;
+    warm_bri = value.int_value;
     lightSET();
 }
 
 void light_cold_bri_set(homekit_value_t value) {
     if (value.format != homekit_format_int) {
-        printf("Invalid bri-value format: %d\n", value.format);
+        printf("Invalid cold-value format: %d\n", value.format);
         return;
     }
     cold_bri = value.int_value;
@@ -240,10 +240,16 @@ homekit_accessory_t *accessories[] = {
             }),
         HOMEKIT_SERVICE(LIGHTBULB, .primary=true,
             .characteristics=(homekit_characteristic_t*[]){
-                HOMEKIT_CHARACTERISTIC(NAME, "Sonoff Led"),
+                HOMEKIT_CHARACTERISTIC(NAME, "Cold light"),
                 &lightbulb_on,
                 HOMEKIT_CHARACTERISTIC(BRIGHTNESS, 100, .getter=light_cold_bri_get, .setter=light_cold_bri_set),
-                HOMEKIT_CHARACTERISTIC(SATURATION, 0, .getter=light_warm_bri_get, .setter=light_warm_bri_set),
+            NULL
+        }),
+        HOMEKIT_SERVICE(LIGHTBULB, .primary=true,
+            .characteristics=(homekit_characteristic_t*[]){
+                HOMEKIT_CHARACTERISTIC(NAME, "Warm light"),
+                &lightbulb_on,
+                HOMEKIT_CHARACTERISTIC(BRIGHTNESS, 100, .getter=light_warm_bri_get, .setter=light_warm_bri_set),
             NULL
         }),
         NULL
