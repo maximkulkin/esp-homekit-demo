@@ -67,7 +67,7 @@ homekit_accessory_t *accessories[] = {
         HOMEKIT_SERVICE(ACCESSORY_INFORMATION, .characteristics=(homekit_characteristic_t*[]){
             HOMEKIT_CHARACTERISTIC(NAME, "Garagentor"),
             HOMEKIT_CHARACTERISTIC(MANUFACTURER, "ObjP"),
-            HOMEKIT_CHARACTERISTIC(SERIAL_NUMBER, "237A2BAB119D"),
+            HOMEKIT_CHARACTERISTIC(SERIAL_NUMBER, "237A2BAB119E"),
             HOMEKIT_CHARACTERISTIC(MODEL, "GDO"),
             HOMEKIT_CHARACTERISTIC(FIRMWARE_REVISION, "0.2"),
             HOMEKIT_CHARACTERISTIC(IDENTIFY, identify),
@@ -99,7 +99,6 @@ homekit_accessory_t *accessories[] = {
 
 bool relay_on = false;
 uint8_t current_door_state = HOMEKIT_CHARACTERISTIC_CURRENT_DOOR_STATE_UNKNOWN;
-//uint8_t target_door_state = HOMEKIT_CHARACTERISTIC_TARGET_DOOR_STATE_UNKNOWN;
 ETSTimer update_timer; // used for delayed updating from contact sensor
 
 
@@ -182,14 +181,6 @@ void gdo_target_state_notify_homekit() {
     homekit_characteristic_notify(c, new_value);
 }
 
-//void target_state_set(uint8_t new_state) {
-//    if (target_door_state != new_state) {
-//        target_door_state = new_state;
-//        gdo_target_state_notify_homekit();
-//    }
-//}
-
-
 void current_state_set(uint8_t new_state) {
     if (current_door_state != new_state) {
         current_door_state = new_state;
@@ -203,20 +194,10 @@ void current_door_state_update_from_sensor() {
 
     switch (sensor_state) {
         case CONTACT_CLOSED:
-	    //target_door_state = HOMEKIT_CHARACTERISTIC_TARGET_DOOR_STATE_OPEN;
-//	    if (current_door_state != HOMEKIT_CHARACTERISTIC_CURRENT_DOOR_STATE_OPEN) {
-//            	current_state_set(HOMEKIT_CHARACTERISTIC_CURRENT_DOOR_STATE_OPENING); // NOP, if already set
-                //target_state_set(HOMEKIT_CHARACTERISTIC_TARGET_DOOR_STATE_OPEN);
-            	current_state_set(HOMEKIT_CHARACTERISTIC_CURRENT_DOOR_STATE_OPEN);
-//	    }
+            current_state_set(HOMEKIT_CHARACTERISTIC_CURRENT_DOOR_STATE_OPEN);
             break;
         case CONTACT_OPEN:
-            //target_door_state = HOMEKIT_CHARACTERISTIC_TARGET_DOOR_STATE_CLOSED;
-//	    if (current_door_state != HOMEKIT_CHARACTERISTIC_CURRENT_DOOR_STATE_CLOSED) {
-//            	current_state_set(HOMEKIT_CHARACTERISTIC_CURRENT_DOOR_STATE_CLOSING); // NOP, if already set
-                //target_state_set(HOMEKIT_CHARACTERISTIC_TARGET_DOOR_STATE_CLOSED);
-            	current_state_set(HOMEKIT_CHARACTERISTIC_CURRENT_DOOR_STATE_CLOSED);
-//	    }
+            current_state_set(HOMEKIT_CHARACTERISTIC_CURRENT_DOOR_STATE_CLOSED);
             break;
         default:
             printf("Unknown contact sensor event: %d\n", sensor_state);
@@ -330,5 +311,3 @@ void user_init(void) {
     homekit_server_init(&config);
 
 }
-
-
