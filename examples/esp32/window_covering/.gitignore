@@ -1,0 +1,4 @@
+build/
+firmware/
+sdkconfig
+sdkconfig.old
