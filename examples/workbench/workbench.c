@@ -81,7 +81,6 @@ homekit_accessory_t *accessories[] = {
         HOMEKIT_SERVICE(ACCESSORY_INFORMATION, .characteristics=(homekit_characteristic_t*[]){
             &ne,
             HOMEKIT_CHARACTERISTIC(NAME, "Workbench"),
-            HOMEKIT_CHARACTERISTIC(MANUFACTURER, "zaes"),
             HOMEKIT_CHARACTERISTIC(SERIAL_NUMBER, "037A2BABF19D"),
             HOMEKIT_CHARACTERISTIC(MODEL, "MyLED"),
             HOMEKIT_CHARACTERISTIC(FIRMWARE_REVISION, "0.1"),
