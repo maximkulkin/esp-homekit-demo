@@ -131,80 +131,7 @@ void main_task(void *_args)
 	while(1) 
 	{
 		led_write(false);
-		
-		//if(gpio_read(remote_valid))	// valid input from remote - not enough inputs!
-		//{
-			if( gpio_read(remote_left_close) )
-			{
-				if( target_position_left.value.int_value > target_position_left.min_value[0] )
-				{
-					if(target_position_left.value.int_value == current_position_left.value.int_value)
-					{
-						target_position_left.value.int_value = current_position_left.value.int_value - 1;
-						homekit_characteristic_notify(&target_position_left, target_position_left.value);
-						left_timer += blind_one_pct_time;
-					}
-				}	
-				else	// allow remote to adjust close past limit
-				{
-					gpio_write(left_blind_open, false);
-					gpio_write(left_blind_close, true);
-				}
-			}
-			else if( gpio_read(remote_left_open) )
-			{
-				if( target_position_left.value.int_value < target_position_left.max_value[0] )
-				{
-					if(target_position_left.value.int_value == current_position_left.value.int_value)
-					{
-						target_position_left.value.int_value = current_position_left.value.int_value + 1;
-						homekit_characteristic_notify(&target_position_left, target_position_left.value);
-						left_timer += blind_one_pct_time;
-					}
-				}
-				else	// allow remote to adjust close past limit
-				{
-					gpio_write(left_blind_open, true);
-					gpio_write(left_blind_close, false);
-				}
-			}
-			if( gpio_read(remote_right_close) )
-			{					
-				if( target_position_right.value.int_value > target_position_right.min_value[0] )
-				{
-					if(target_position_right.value.int_value == current_position_right.value.int_value )
-					{
-						target_position_right.value.int_value = current_position_right.value.int_value - 1;
-						homekit_characteristic_notify(&target_position_right, target_position_right.value);
-						right_timer += blind_one_pct_time;
-					}
-				}
-				else	// allow remote to adjust close past limit
-				{
-					gpio_write(right_blind_open, false);
-					gpio_write(right_blind_close, true);
-				}
-			}
-			else if( gpio_read(remote_right_open) )
-			{
-				if( target_position_right.value.int_value < target_position_right.max_value[0] )
-				{
-					if(target_position_right.value.int_value == current_position_right.value.int_value)
-					{
-						target_position_right.value.int_value = current_position_right.value.int_value + 1;
-						homekit_characteristic_notify(&target_position_right, target_position_right.value);
-						right_timer += blind_one_pct_time;
-					}
-				}
-				else	// allow remote to adjust close past limit
-				{
-					gpio_write(right_blind_open, true);
-					gpio_write(right_blind_close, false);
-				}
-			}
-		//}
-		
-		
+				
 		
 		if( current_position_right.value.int_value < target_position_right.value.int_value )
 		{
@@ -309,6 +236,80 @@ void main_task(void *_args)
 			gpio_write(left_blind_open, false);
 			gpio_write(left_blind_close, false);
 		}
+
+
+		//if(gpio_read(remote_valid))	// valid input from remote - not enough inputs!
+		//{
+			if( gpio_read(remote_left_close) )
+			{
+				if( target_position_left.value.int_value > target_position_left.min_value[0] )
+				{
+					if(target_position_left.value.int_value == current_position_left.value.int_value)
+					{
+						target_position_left.value.int_value = current_position_left.value.int_value - 1;
+						homekit_characteristic_notify(&target_position_left, target_position_left.value);
+						left_timer += blind_one_pct_time;
+					}
+				}	
+				else	// allow remote to adjust close past limit
+				{
+					gpio_write(left_blind_open, false);
+					gpio_write(left_blind_close, true);
+				}
+			}
+			else if( gpio_read(remote_left_open) )
+			{
+				if( target_position_left.value.int_value < target_position_left.max_value[0] )
+				{
+					if(target_position_left.value.int_value == current_position_left.value.int_value)
+					{
+						target_position_left.value.int_value = current_position_left.value.int_value + 1;
+						homekit_characteristic_notify(&target_position_left, target_position_left.value);
+						left_timer += blind_one_pct_time;
+					}
+				}
+				else	// allow remote to adjust open past limit
+				{
+					gpio_write(left_blind_open, true);
+					gpio_write(left_blind_close, false);
+				}
+			}
+			if( gpio_read(remote_right_close) )
+			{					
+				if( target_position_right.value.int_value > target_position_right.min_value[0] )
+				{
+					if(target_position_right.value.int_value == current_position_right.value.int_value )
+					{
+						target_position_right.value.int_value = current_position_right.value.int_value - 1;
+						homekit_characteristic_notify(&target_position_right, target_position_right.value);
+						right_timer += blind_one_pct_time;
+					}
+				}
+				else	// allow remote to adjust close past limit
+				{
+					gpio_write(right_blind_open, false);
+					gpio_write(right_blind_close, true);
+				}
+			}
+			else if( gpio_read(remote_right_open) )
+			{
+				if( target_position_right.value.int_value < target_position_right.max_value[0] )
+				{
+					if(target_position_right.value.int_value == current_position_right.value.int_value)
+					{
+						target_position_right.value.int_value = current_position_right.value.int_value + 1;
+						homekit_characteristic_notify(&target_position_right, target_position_right.value);
+						right_timer += blind_one_pct_time;
+					}
+				}
+				else	// allow remote to adjust open past limit
+				{
+					gpio_write(right_blind_open, true);
+					gpio_write(right_blind_close, false);
+				}
+			}
+		//}
+		
 
 		vTaskDelay(poll_time);
 	}
