@@ -150,7 +150,10 @@ void gpio_init() {
     gpio_set_interrupt(MOTION_SENSOR_GPIO, GPIO_INTTYPE_EDGE_ANY, motion_sensor_callback);
 }
 
-
+homekit_server_config_t config = {
+    .accessories = accessories,
+    .password = "111-11-111"
+};
 void on_wifi_ready() {
     homekit_server_init(&config);
 }
