@@ -101,7 +101,6 @@ void on_wifi_ready() {
 }
 void user_init(void) {
     uart_set_baud(0, 115200);
-    create_accessory_name();
     wifi_config_init("motion-sensor", NULL, on_wifi_ready);
     gpio_init();
 }
