@@ -8,12 +8,10 @@ EXTRA_COMPONENTS = \
 	$(abspath ../../components/cJSON) \
 	$(abspath ../../components/homekit)
 
-FLASH_SIZE ?= 8
+FLASH_SIZE ?= 32
 FLASH_MODE ?= dout
-FLASH_SPEED ?= 40
-HOMEKIT_SPI_FLASH_BASE_ADDR ?= 0x7A000
 
-EXTRA_CFLAGS += -I../.. -DHOMEKIT_SHORT_APPLE_UUIDS -DHOMEKIT_DEBUG
+EXTRA_CFLAGS += -I../.. -DHOMEKIT_SHORT_APPLE_UUIDS
 
 include $(SDK_PATH)/common.mk
 
