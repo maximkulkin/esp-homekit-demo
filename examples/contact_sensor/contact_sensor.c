@@ -87,6 +87,7 @@ void contact_sensor_callback(uint8_t gpio) {
 }
 
 void gpio_init() {
+    gpio_enable(LED_GPIO, GPIO_OUTPUT);
     gpio_enable(CONTACT_SENSOR_GPIO, GPIO_INPUT);
     gpio_set_pullup(CONTACT_SENSOR_GPIO, true, true);
     gpio_set_interrupt(CONTACT_SENSOR_GPIO, GPIO_INTTYPE_EDGE_ANY, contact_sensor_callback);
