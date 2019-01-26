@@ -87,6 +87,7 @@ void motion_sensor_callback(uint8_t gpio) {
 }
 
 void gpio_init() {
+    gpio_enable(LED_GPIO, GPIO_OUTPUT);
     gpio_enable(MOTION_SENSOR_GPIO, GPIO_INPUT);
     gpio_set_pullup(MOTION_SENSOR_GPIO, false, false);
     gpio_set_interrupt(MOTION_SENSOR_GPIO, GPIO_INTTYPE_EDGE_ANY, motion_sensor_callback);
