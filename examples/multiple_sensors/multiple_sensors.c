@@ -137,7 +137,7 @@ void motion_sensor_callback(uint8_t gpio) {
         int new = 0;
         new = gpio_read(MOTION_SENSOR_GPIO);
         if (new) {
-            identify();
+            identify(NULL);
         }
         motion_detected.value = HOMEKIT_BOOL(new);
         homekit_characteristic_notify(&motion_detected, HOMEKIT_BOOL(new));
