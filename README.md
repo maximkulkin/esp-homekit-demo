@@ -77,11 +77,11 @@ make -C examples/esp32/led all
 6. To prevent any effects from previous firmware (e.g. firmware crashing right at
    start), highly recommend to erase flash:
 ```shell
-    make -C examples/led erase_flash
+    make -C examples/esp32/led erase_flash
 ```
 7. Upload firmware to ESP32:
 ```shell
-    make -C examples/led flash
-    make -C examples/led monitor
+    make -C examples/esp32/led flash
+    make -C examples/esp32/led monitor
 ```
 
