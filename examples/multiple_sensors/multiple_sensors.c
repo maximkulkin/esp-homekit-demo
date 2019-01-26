@@ -1,5 +1,5 @@
 #define DEVICE_MANUFACTURER "Unknown"
-#define DEVICE_NAME "Motion-Sensor"
+#define DEVICE_NAME "MultiSensor"
 #define DEVICE_MODEL "esp8266"
 #define DEVICE_SERIAL "12345678"
 #define FW_VERSION "1.0"
@@ -110,10 +110,10 @@ homekit_accessory_t *accessories[] = {
     HOMEKIT_ACCESSORY(.id=2, .category=homekit_accessory_category_thermostat, .services=(homekit_service_t*[]) {
         HOMEKIT_SERVICE(ACCESSORY_INFORMATION, .characteristics=(homekit_characteristic_t*[]) {
             &name,
-            HOMEKIT_CHARACTERISTIC(MANUFACTURER, "YP"),
+            &manufacturer,
             HOMEKIT_CHARACTERISTIC(SERIAL_NUMBER, "0012345"),
-            HOMEKIT_CHARACTERISTIC(MODEL, "MultipleSensors"),
-            HOMEKIT_CHARACTERISTIC(FIRMWARE_REVISION, "0.1"),
+            &model,
+            &revision,
             HOMEKIT_CHARACTERISTIC(IDENTIFY, temperature_sensor_identify),
             NULL
         }),
