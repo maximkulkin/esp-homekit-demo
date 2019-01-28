@@ -34,7 +34,7 @@ void led_write(bool on) {
 
 void identify_task(void *_args) {
     // We identify the board by Flashing it's LED.
-    for (int i=0; i<3; i++) {
+    for (int i=0; i<1; i++) {
         for (int j=0; j<2; j++) {
             led_write(true);
             vTaskDelay(100 / portTICK_PERIOD_MS);
@@ -48,7 +48,7 @@ void identify_task(void *_args) {
     vTaskDelete(NULL);
 }
 
-void identify(homekit_value_t _value) {
+void identify() {
     printf("identify\n\n");
     xTaskCreate(identify_task, "identify", 128, NULL, 2, NULL);
 }
@@ -78,6 +78,7 @@ void contact_sensor_callback(uint8_t gpio) {
     if (gpio == CONTACT_SENSOR_GPIO){
         int new = 0;
         new = gpio_read(CONTACT_SENSOR_GPIO);
+        identify();
         sensor_state.value = HOMEKIT_UINT8(new);
         homekit_characteristic_notify(&sensor_state, HOMEKIT_UINT8(new));
     }
