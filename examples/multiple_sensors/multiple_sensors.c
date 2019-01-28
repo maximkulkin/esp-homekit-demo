@@ -41,7 +41,7 @@ void led_write(bool on) {
 
 void identify_task(void *_args) {
     // We identify the board by Flashing it's LED.
-    for (int i=0; i<3; i++) {
+    for (int i=0; i<1; i++) {
         for (int j=0; j<2; j++) {
             led_write(true);
             vTaskDelay(100 / portTICK_PERIOD_MS);
