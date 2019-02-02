@@ -16,3 +16,6 @@
 [submodule "components/WS2812FX"]
 	path = components/WS2812FX
 	url = https://github.com/pcsaito/WS2812FX-rtos
+[submodule "components/led-status"]
+	path = components/led-status
+	url = https://github.com/maximkulkin/esp-led-status.git
