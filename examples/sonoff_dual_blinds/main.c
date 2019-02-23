@@ -27,6 +27,9 @@
 #define POSITION_STATE_OPENING 1
 #define POSITION_STATE_STOPPED 2
 
+// number of seconds the blinds take to move from fully open to fully closed position
+#define SECONDS_FROM_CLOSED_TO_OPEN 15
+
 TaskHandle_t updateStateTask;
 homekit_characteristic_t current_position;
 homekit_characteristic_t target_position;
@@ -147,7 +150,6 @@ void button_up_callback(uint8_t gpio_num, button_event_t event) {
 
 void button_down_callback(uint8_t gpio_num, button_event_t event) {
     // down button pressed
-printf("boton abajo");
     if (position_state.value.int_value != POSITION_STATE_STOPPED){ // if moving, stop
 	target_position.value.int_value = current_position.value.int_value;
 	target_position_changed();
@@ -187,7 +189,7 @@ printf("update_state\n");
             vTaskSuspend(updateStateTask);
         }
 
-        vTaskDelay(pdMS_TO_TICKS(150));
+        vTaskDelay(pdMS_TO_TICKS(SECONDS_FROM_CLOSED_TO_OPEN * 10));
     }
 }
 
