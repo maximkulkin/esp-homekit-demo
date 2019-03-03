@@ -145,8 +145,6 @@ void main_task(void *_args)
 	{
 		led_write(false);
 		
-		
-		
 		if( current_position_right.value.int_value < target_position_right.value.int_value )
 		{
 			gpio_write(right_blind_open, true);
@@ -251,6 +249,7 @@ void main_task(void *_args)
 			gpio_write(left_blind_close, false);
 		}
 
+
 		//if(gpio_read(remote_valid))	// valid input from remote - not enough inputs!
 		//{
 			if( gpio_read(remote_left_close) )
@@ -281,7 +280,7 @@ void main_task(void *_args)
 						left_timer += blind_one_pct_time;
 					}
 				}
-				else	// allow remote to adjust close past limit
+				else	// allow remote to adjust open past limit
 				{
 					gpio_write(left_blind_open, true);
 					gpio_write(left_blind_close, false);
@@ -315,7 +314,7 @@ void main_task(void *_args)
 						right_timer += blind_one_pct_time;
 					}
 				}
-				else	// allow remote to adjust close past limit
+				else	// allow remote to adjust open past limit
 				{
 					gpio_write(right_blind_open, true);
 					gpio_write(right_blind_close, false);
@@ -323,7 +322,6 @@ void main_task(void *_args)
 			}
 		//}
 		
-
 
 		vTaskDelay(poll_time);
 	}
