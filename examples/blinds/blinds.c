@@ -1,3 +1,11 @@
+/** @file
+
+Motorized blinds.  Crude approach simply constant time to open or close a blind.  Since every one is different, there are different consants for left and right, and open and close.  This captures only some of the variation present.  This approach will never work 100%, there will always be some creepage or inconsistancy because there is no feedback from the blinds!
+
+- Marc
+
+*/
+
 #include <stdio.h>
 #include <espressif/esp_wifi.h>
 #include <espressif/esp_sta.h>
@@ -95,13 +103,20 @@ const int remote_left_open = 5;
 const int remote_right_close = 16;
 const int remote_right_open = 10;
 
-const int poll_time = 20 / portTICK_PERIOD_MS;
-const int blind_open_time = 6500 / portTICK_PERIOD_MS; //mS
-const int blind_one_pct_time = (6500 / portTICK_PERIOD_MS) / 100; // total time divided by 100 (note, this approach will never be more than a hack)
+const int poll_time = 50 / portTICK_PERIOD_MS;
+const int blind_one_pct_time = (6400 / portTICK_PERIOD_MS) / 100; // total time divided by 100 - used for manual control 
+const int left_blind_open_time = 4300 / portTICK_PERIOD_MS;
+const int left_blind_close_time = 5900 / portTICK_PERIOD_MS;	// bias due to heavier motor load 
+const int right_blind_open_time = 6000 / portTICK_PERIOD_MS;
+const int right_blind_close_time = 7000 / portTICK_PERIOD_MS;	// bias due to heavier motor load closing
 
-#define TIMER_TO_PCT_REM(x) ((x) * 100 / blind_open_time)
+#define TIMER_TO_PCT_L_OPEN(x) ((x) * 100 / left_blind_open_time)
+#define TIMER_TO_PCT_L_CLOSE(x) ((x) * 100 / left_blind_close_time)
+#define TIMER_TO_PCT_R_OPEN(x) ((x) * 100 / right_blind_open_time)
+#define TIMER_TO_PCT_R_CLOSE(x) ((x) * 100 / right_blind_close_time)
 
 bool led_on = false;
+
 
 void led_write(bool on) {
     gpio_write(led_gpio, on ? 0 : 1);
@@ -114,8 +129,6 @@ void led_init() {
 
 void main_task(void *_args) 
 {
-//	vTaskDelay(10000 / portTICK_PERIOD_MS);
-	
 	gpio_enable(left_blind_close, GPIO_OUTPUT);
 	gpio_enable(left_blind_open, GPIO_OUTPUT);
 	gpio_enable(right_blind_close, GPIO_OUTPUT);
@@ -132,6 +145,112 @@ void main_task(void *_args)
 	{
 		led_write(false);
 		
+		
+		
+		if( current_position_right.value.int_value < target_position_right.value.int_value )
+		{
+			gpio_write(right_blind_open, true);
+			gpio_write(right_blind_close, false);
+			if( right_timer > 0 )
+			{
+				right_timer -= poll_time;
+				if( right_timer <= 0 )
+					right_timer = 0;
+				
+				if( target_position_right.value.int_value != current_position_right.value.int_value + TIMER_TO_PCT_R_OPEN(right_timer) )
+				{
+					current_position_right.value.int_value = target_position_right.value.int_value - TIMER_TO_PCT_R_OPEN(right_timer);
+					homekit_characteristic_notify(&current_position_right, current_position_right.value);
+					led_write(true);
+					printf("open R current: %d target: %d timer %d\n", current_position_right.value.int_value, target_position_right.value.int_value, right_timer);
+				}			
+			}
+			else
+			{
+				right_timer = poll_time;
+			}
+		}
+		else if( current_position_right.value.int_value > target_position_right.value.int_value )
+		{
+			gpio_write(right_blind_open, false);
+			gpio_write(right_blind_close, true);
+			if( right_timer > 0 )
+			{
+				right_timer -= poll_time;
+				if( right_timer <= 0 )
+					right_timer = 0;
+				
+				if( target_position_right.value.int_value != current_position_right.value.int_value - TIMER_TO_PCT_R_CLOSE(right_timer) )
+				{
+					current_position_right.value.int_value = target_position_right.value.int_value + TIMER_TO_PCT_R_CLOSE(right_timer);
+					homekit_characteristic_notify(&current_position_right, current_position_right.value);
+					led_write(true);
+					printf("close R current: %d target: %d timer %d\n", current_position_right.value.int_value, target_position_right.value.int_value, right_timer);
+				}			
+			}
+			else
+			{
+				right_timer = poll_time;
+			}
+		}
+		else
+		{
+			gpio_write(right_blind_open, false);
+			gpio_write(right_blind_close, false);
+		}
+
+		if( current_position_left.value.int_value < target_position_left.value.int_value )
+		{
+			gpio_write(left_blind_open, true);
+			gpio_write(left_blind_close, false);
+			if( left_timer > 0 )
+			{
+				left_timer -= poll_time;
+				if( left_timer <= 0 )
+					left_timer = 0;
+				
+				if( target_position_left.value.int_value != current_position_left.value.int_value + TIMER_TO_PCT_L_OPEN(left_timer) )
+				{
+					current_position_left.value.int_value = target_position_left.value.int_value - TIMER_TO_PCT_L_OPEN(left_timer);
+					homekit_characteristic_notify(&current_position_left, current_position_left.value);
+					led_write(true);
+					printf("open L current: %d target: %d timer %d\n", current_position_left.value.int_value, target_position_left.value.int_value, left_timer);
+				}			
+			}
+			else
+			{
+				left_timer = poll_time;
+			}
+		}
+		else if( current_position_left.value.int_value > target_position_left.value.int_value )
+		{
+			gpio_write(left_blind_open, false);
+			gpio_write(left_blind_close, true);
+			if( left_timer > 0 )
+			{
+				left_timer -= poll_time;
+				if( left_timer <= 0 )
+					left_timer = 0;
+				
+				if( target_position_left.value.int_value != current_position_left.value.int_value - TIMER_TO_PCT_L_CLOSE(left_timer) )
+				{
+					current_position_left.value.int_value = target_position_left.value.int_value + TIMER_TO_PCT_L_CLOSE(left_timer);
+					homekit_characteristic_notify(&current_position_left, current_position_left.value);
+					led_write(true);
+					printf("close L current: %d target: %d timer %d\n", current_position_left.value.int_value, target_position_left.value.int_value, left_timer);
+				}			
+			}
+			else
+			{
+				left_timer = poll_time;
+			}
+		}
+		else
+		{
+			gpio_write(left_blind_open, false);
+			gpio_write(left_blind_close, false);
+		}
+
 		//if(gpio_read(remote_valid))	// valid input from remote - not enough inputs!
 		//{
 			if( gpio_read(remote_left_close) )
@@ -204,111 +323,7 @@ void main_task(void *_args)
 			}
 		//}
 		
-		
-		
-		if( current_position_right.value.int_value < target_position_right.value.int_value )
-		{
-			gpio_write(right_blind_open, true);
-			gpio_write(right_blind_close, false);
-			if( right_timer > 0 )
-			{
-				right_timer -= poll_time;
-				if( right_timer <= 0 )
-					right_timer = 0;
-				
-				if( target_position_right.value.int_value != current_position_right.value.int_value + TIMER_TO_PCT_REM(right_timer) )
-				{
-					current_position_right.value.int_value = target_position_right.value.int_value - TIMER_TO_PCT_REM(right_timer);
-					homekit_characteristic_notify(&current_position_right, current_position_right.value);
-					led_write(true);
-					printf("R current: %d target: %d timer %d\n", current_position_right.value.int_value, target_position_right.value.int_value, right_timer);
-				}			
-			}
-			else
-			{
-				right_timer = poll_time;
-			}
-		}
-		else if( current_position_right.value.int_value > target_position_right.value.int_value )
-		{
-			gpio_write(right_blind_open, false);
-			gpio_write(right_blind_close, true);
-			if( right_timer > 0 )
-			{
-				right_timer -= poll_time;
-				if( right_timer <= 0 )
-					right_timer = 0;
-				
-				if( target_position_right.value.int_value != current_position_right.value.int_value - TIMER_TO_PCT_REM(right_timer) )
-				{
-					current_position_right.value.int_value = target_position_right.value.int_value + TIMER_TO_PCT_REM(right_timer);
-					homekit_characteristic_notify(&current_position_right, current_position_right.value);
-					led_write(true);
-					printf("R current: %d target: %d timer %d\n", current_position_right.value.int_value, target_position_right.value.int_value, right_timer);
-				}			
-			}
-			else
-			{
-				right_timer = poll_time;
-			}
-		}
-		else
-		{
-			gpio_write(right_blind_open, false);
-			gpio_write(right_blind_close, false);
-		}
 
-		if( current_position_left.value.int_value < target_position_left.value.int_value )
-		{
-			gpio_write(left_blind_open, true);
-			gpio_write(left_blind_close, false);
-			if( left_timer > 0 )
-			{
-				left_timer -= poll_time;
-				if( left_timer <= 0 )
-					left_timer = 0;
-				
-				if( target_position_left.value.int_value != current_position_left.value.int_value + TIMER_TO_PCT_REM(left_timer) )
-				{
-					current_position_left.value.int_value = target_position_left.value.int_value - TIMER_TO_PCT_REM(left_timer);
-					homekit_characteristic_notify(&current_position_left, current_position_left.value);
-					led_write(true);
-					printf("L current: %d target: %d timer %d\n", current_position_left.value.int_value, target_position_left.value.int_value, left_timer);
-				}			
-			}
-			else
-			{
-				left_timer = poll_time;
-			}
-		}
-		else if( current_position_left.value.int_value > target_position_left.value.int_value )
-		{
-			gpio_write(left_blind_open, false);
-			gpio_write(left_blind_close, true);
-			if( left_timer > 0 )
-			{
-				left_timer -= poll_time;
-				if( left_timer <= 0 )
-					left_timer = 0;
-				
-				if( target_position_left.value.int_value != current_position_left.value.int_value - TIMER_TO_PCT_REM(left_timer) )
-				{
-					current_position_left.value.int_value = target_position_left.value.int_value + TIMER_TO_PCT_REM(left_timer);
-					homekit_characteristic_notify(&current_position_left, current_position_left.value);
-					led_write(true);
-					printf("L current: %d target: %d timer %d\n", current_position_left.value.int_value, target_position_left.value.int_value, left_timer);
-				}			
-			}
-			else
-			{
-				left_timer = poll_time;
-			}
-		}
-		else
-		{
-			gpio_write(left_blind_open, false);
-			gpio_write(left_blind_close, false);
-		}
 
 		vTaskDelay(poll_time);
 	}
@@ -321,9 +336,9 @@ void on_update_right(homekit_characteristic_t *ch, homekit_value_t value, void *
 	int percent = current_position_right.value.int_value - target_position_right.value.int_value;
 	
 	if( percent < 0 ) 
-		percent = -percent;
-	
-	right_timer = blind_open_time * percent / 100;
+		right_timer = right_blind_open_time * (-percent) / 100;
+	else
+		right_timer = right_blind_close_time * percent / 100;
 	
 	printf("R:current: %d target: %d timer %d\n", current_position_right.value.int_value, target_position_right.value.int_value, right_timer);
 }
@@ -333,9 +348,9 @@ void on_update_left(homekit_characteristic_t *ch, homekit_value_t value, void *c
 	int percent = current_position_left.value.int_value - target_position_left.value.int_value;
 	
 	if( percent < 0 ) 
-		percent = -percent;
-	
-	left_timer = blind_open_time * percent / 100;
+		left_timer = left_blind_open_time * (-percent) / 100;
+	else
+		left_timer = left_blind_close_time * percent / 100;
 	
 	printf("L:current: %d target: %d timer %d\n", current_position_left.value.int_value, target_position_left.value.int_value, left_timer);
 }
