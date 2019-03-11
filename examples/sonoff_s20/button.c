@@ -38,7 +38,6 @@ void button_intr_callback(uint8_t gpio) {
     uint32_t now = xTaskGetTickCountFromISR();
     if ((now - button->last_event_time)*portTICK_PERIOD_MS < button->debounce_time) {
         // debounce time, ignore events
-        button->last_press_time = 0;
         return;
     }
     button->last_event_time = now;
@@ -48,17 +47,9 @@ void button_intr_callback(uint8_t gpio) {
     } else {
         // The button is released. Handle the use cases.
         if ((now - button->last_press_time) * portTICK_PERIOD_MS > button->long_press_time) {
-         	if (button->last_press_time > 0)
-            	{
-            	button->callback(button->gpio_num, button_event_long_press);
-            	button->last_press_time = 0;
-            	}
+            button->callback(button->gpio_num, button_event_long_press);
         } else {
-            if (button->last_press_time > 0)
-            	{
-            	button->callback(button->gpio_num, button_event_single_press);
-            	button->last_press_time = 0;
-            	}
+            button->callback(button->gpio_num, button_event_single_press);
         }
     }
 }
@@ -80,7 +71,7 @@ int button_create(const uint8_t gpio_num, bool pressed_value, uint16_t long_pres
 
     uint32_t now = xTaskGetTickCountFromISR();
     button->last_event_time = now;
-    button->last_press_time = 0;
+    button->last_press_time = now;
 
     button->next = buttons;
     buttons = button;
