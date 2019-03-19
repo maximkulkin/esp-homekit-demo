@@ -56,7 +56,6 @@ void identify_task(void *_args) {
 }
 
 void identify() {
-    printf("identify\n\n");
     xTaskCreate(identify_task, "identify", 128, NULL, 2, NULL);
 }
 void temperature_sensor_identify(homekit_value_t _value) {
@@ -64,7 +63,6 @@ void temperature_sensor_identify(homekit_value_t _value) {
 }
 
 void temperature_sensor_task(void *_args) {
-    gpio_set_pullup(SENSOR_PIN, false, false);
 
     float humidity_value, temperature_value;
     while (1) {
@@ -82,7 +80,7 @@ void temperature_sensor_task(void *_args) {
             printf("Couldnt read data from sensor\n");
         }
 
-        vTaskDelay(6000 / portTICK_PERIOD_MS);
+        vTaskDelay(3000 / portTICK_PERIOD_MS);
     }
 }
 void temperature_sensor_init() {
@@ -134,8 +132,12 @@ homekit_accessory_t *accessories[] = {
 
 void motion_sensor_callback(uint8_t gpio) {
     if (gpio == MOTION_SENSOR_GPIO){
+        printf("Motion detected\n");
         int new = 0;
         new = gpio_read(MOTION_SENSOR_GPIO);
+        if (new) {	
+            identify();	
+        }
         motion_detected.value = HOMEKIT_BOOL(new);
         homekit_characteristic_notify(&motion_detected, HOMEKIT_BOOL(new));
     }
@@ -145,7 +147,9 @@ void motion_sensor_callback(uint8_t gpio) {
 }
 
 void gpio_init() {
+    gpio_enable(LED_GPIO, GPIO_OUTPUT);	
     gpio_enable(MOTION_SENSOR_GPIO, GPIO_INPUT);
+    gpio_set_pullup(SENSOR_PIN, false, false);
     gpio_set_pullup(MOTION_SENSOR_GPIO, false, false);
     gpio_set_interrupt(MOTION_SENSOR_GPIO, GPIO_INTTYPE_EDGE_ANY, motion_sensor_callback);
 }
