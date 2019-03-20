@@ -29,8 +29,8 @@
 #define USR_PIN_ECHO    25
 #define PING_TIMEOUT  6000
 
-#define DISTANCE_CLOSED 190 // greater than
-#define DISTANCE_OPEN 20 // smaller than
+#define DISTANCE_CLOSED 60 // greater than
+#define DISTANCE_OPEN 10 // smaller than
 #define DISTANCE_CHANGE 2 // minimal change
 #define TIME_STUCK 5 // minimal change
 
@@ -245,21 +245,19 @@ void update_doorstate() {
   if (distance < DISTANCE_OPEN) {
     preDist = distance;
     if (current_door_state != HOMEKIT_CHARACTERISTIC_CURRENT_DOOR_STATE_OPEN) {
-      printf("Dist: %d\n", distance);
+      //printf("Dist: %d\n", distance);
       printf("Door is now open\n");
       current_door_state = HOMEKIT_CHARACTERISTIC_CURRENT_DOOR_STATE_OPEN;
       target_door_state = HOMEKIT_CHARACTERISTIC_TARGET_DOOR_STATE_OPEN;
-      printf("Door update S: %d  T: %d\n", current_door_state, target_door_state);
       updateHK = true;
     }
   } else if (distance > DISTANCE_CLOSED) {
     preDist = distance;
     if (current_door_state != HOMEKIT_CHARACTERISTIC_CURRENT_DOOR_STATE_CLOSED) {
-      printf("Dist: %d\n", distance);
+      //printf("Dist: %d\n", distance);
       printf("Door is now closed\n");
       current_door_state = HOMEKIT_CHARACTERISTIC_CURRENT_DOOR_STATE_CLOSED;
       target_door_state = HOMEKIT_CHARACTERISTIC_TARGET_DOOR_STATE_CLOSED;
-      printf("Door update S: %d  T: %d\n", current_door_state, target_door_state);
       updateHK = true;
     }
   } else {
@@ -267,9 +265,11 @@ void update_doorstate() {
     int isMoving = 0; // 0- no, 1 open, 2- closing
     if (distance > preDist) {
       diff = distance - preDist;
+      preDist = distance;
       isMoving = 2;
     } else if (distance < preDist) {
       diff = preDist - distance;
+      preDist = distance;
       isMoving = 1;
     }
     if (diff < DISTANCE_CHANGE) {
@@ -280,7 +280,7 @@ void update_doorstate() {
     }
 
     if (isMoving == 1) {
-      printf("Dist: %d\n", distance);
+      //printf("Dist: %d\n", distance);
       if (current_door_state != HOMEKIT_CHARACTERISTIC_CURRENT_DOOR_STATE_OPENING) {
         printf("Door starts opening\n");
         current_door_state = HOMEKIT_CHARACTERISTIC_CURRENT_DOOR_STATE_OPENING;
@@ -291,9 +291,9 @@ void update_doorstate() {
         updateHK = true;
       }
     } else if (isMoving == 2) {
-      printf("Dist: %d\n", distance);
+      //printf("Dist: %d\n", distance);
       if (current_door_state != HOMEKIT_CHARACTERISTIC_CURRENT_DOOR_STATE_CLOSING) {
-          printf("Door starts closing\n");
+        printf("Door starts closing\n");
         current_door_state = HOMEKIT_CHARACTERISTIC_CURRENT_DOOR_STATE_CLOSING;
         updateHK = true;
       }
@@ -305,6 +305,7 @@ void update_doorstate() {
       int64_t diffTime = nowTime_ms - lastMoveTime_ms;
       if (diffTime > (TIME_STUCK*1000)) {
         if (current_door_state != HOMEKIT_CHARACTERISTIC_CURRENT_DOOR_STATE_STOPPED) {
+         printf("Dist: %d\n", distance);
           current_door_state = HOMEKIT_CHARACTERISTIC_CURRENT_DOOR_STATE_STOPPED;
           printf("Door is now stopped\n");
           updateHK = true;
@@ -326,6 +327,9 @@ void update_doorstate() {
   }
 }
 
+
+int readCount = 0;
+int unsetCount = 0;
 void ultrasonic_read() {
 
   gpio_set_level(USR_PIN_TRIGGER, 0);
@@ -366,12 +370,31 @@ void ultrasonic_read() {
   int64_t timeDur = timeEnd - timeStart;
   if (timeDur > 100) {
     int dist = timeDur/58;
-    distance = dist;
+    if (distance != 0) {
+      int diff = 0;
+      if (distance > dist) {
+        diff = distance - dist;
+      } else {
+        diff = dist - distance;
+      }
+      if (diff < 10) {
+        readCount += 1;
+      } else {
+        unsetCount +=1;
+      }
+    } else {
+      readCount = 3;
+    }
     //printf("Start: %lld\n", timeStart);
     //printf("Stop: %lld\n", timeEnd);
     //printf("Duration: %lld\n", timeDur);
-    //printf("Dist: %d cm\n", dist);
-    update_doorstate();
+    //printf("Dist: %d cm (%d)\n", dist,readCount);
+    if (readCount>=3 || unsetCount > 10) {
+      distance = dist;
+      update_doorstate();
+      readCount = 0;
+      unsetCount = 0;
+    }
   }
 }
 
@@ -406,5 +429,5 @@ void app_main(void) {
 
   esp_timer_handle_t periodic_timer;
   ESP_ERROR_CHECK(esp_timer_create(&periodic_timer_args, &periodic_timer));
-  ESP_ERROR_CHECK(esp_timer_start_periodic(periodic_timer, 1000000));
+  ESP_ERROR_CHECK(esp_timer_start_periodic(periodic_timer, 100000));
 }
