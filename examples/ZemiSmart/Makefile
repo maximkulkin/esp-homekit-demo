@@ -2,9 +2,9 @@ PROGRAM = light
 
 EXTRA_COMPONENTS = \
 	extras/http-parser \
-	$(abspath ../../components/wolfssl) \
-	$(abspath ../../components/cJSON) \
-	$(abspath ../../components/homekit)
+	$(abspath ../../components/common/wolfssl) \
+	$(abspath ../../components/common/cJSON) \
+	$(abspath ../../components/common/homekit)
 
 FLASH_SIZE ?= 8
 HOMEKIT_SPI_FLASH_BASE_ADDR ?= 0x7A000
