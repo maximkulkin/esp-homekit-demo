@@ -4,10 +4,10 @@ EXTRA_COMPONENTS = \
 	extras/dht \
 	extras/http-parser \
 	extras/dhcpserver \
-	$(abspath ../../components/wifi_config) \
-	$(abspath ../../components/wolfssl) \
-	$(abspath ../../components/cJSON) \
-	$(abspath ../../components/homekit)
+	$(abspath ../../components/esp-8266/wifi_config) \
+	$(abspath ../../components/common/wolfssl) \
+	$(abspath ../../components/common/cJSON) \
+	$(abspath ../../components/common/homekit)
 
 # DHT22 sensor pin D1 in NodeMCU
 SENSOR_PIN ?= 5
