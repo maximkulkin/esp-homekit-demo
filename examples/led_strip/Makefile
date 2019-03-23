@@ -4,9 +4,9 @@ EXTRA_COMPONENTS = \
 	extras/http-parser \
 	extras/i2s_dma \
 	extras/ws2812_i2s \
-	$(abspath ../../components/wolfssl) \
-	$(abspath ../../components/cJSON) \
-	$(abspath ../../components/homekit)
+	$(abspath ../../components/common/wolfssl) \
+	$(abspath ../../components/common/cJSON) \
+	$(abspath ../../components/common/homekit)
 
 FLASH_SIZE ?= 32
 # FLASH_SIZE ?= 8

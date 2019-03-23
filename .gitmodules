@@ -1,21 +1,21 @@
 [submodule "components/cJSON"]
-	path = components/cJSON
+	path = components/common/cJSON
 	url = https://github.com/maximkulkin/esp-cjson
 [submodule "components/wolfssl"]
-	path = components/wolfssl
+	path = components/common/wolfssl
 	url = https://github.com/maximkulkin/esp-wolfssl
 [submodule "components/homekit"]
-	path = components/homekit
+	path = components/common/homekit
 	url = https://github.com/maximkulkin/esp-homekit
 [submodule "components/http-parser"]
-	path = components/http-parser
+	path = components/esp-32/http-parser
 	url = https://github.com/maximkulkin/esp-http-parser.git
 [submodule "components/wifi_config"]
-	path = components/wifi_config
+	path = components/esp-8266/wifi_config
 	url = https://github.com/maximkulkin/esp-wifi-config
 [submodule "components/WS2812FX"]
-	path = components/WS2812FX
+	path = components/esp-8266/WS2812FX
 	url = https://github.com/pcsaito/WS2812FX-rtos
 [submodule "components/led-status"]
-	path = components/led-status
+	path = components/esp-8266/led-status
 	url = https://github.com/maximkulkin/esp-led-status.git

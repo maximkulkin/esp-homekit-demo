@@ -2,10 +2,10 @@ PROGRAM = led_status
 
 EXTRA_COMPONENTS = \
 	extras/http-parser \
-	$(abspath ../../components/wolfssl) \
-	$(abspath ../../components/cJSON) \
-	$(abspath ../../components/homekit) \
-	$(abspath ../../components/led-status)
+	$(abspath ../../components/common/wolfssl) \
+	$(abspath ../../components/common/cJSON) \
+	$(abspath ../../components/common/homekit) \
+	$(abspath ../../components/esp-8266/led-status)
 
 FLASH_SIZE ?= 32
 
