@@ -56,7 +56,7 @@ void identify_task(void *_args) {
 }
 
 void identify() {
-    xTaskCreate(identify_task, "identify", 128, NULL, 2, NULL);
+    xTaskCreate(identify_task, "identify", 256, NULL, 2, NULL);
 }
 void temperature_sensor_identify(homekit_value_t _value) {
     printf("Temperature sensor identify\n");
