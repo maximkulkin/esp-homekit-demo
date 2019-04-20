@@ -132,10 +132,10 @@ homekit_accessory_t *accessories[] = {
 
 void motion_sensor_callback(uint8_t gpio) {
     if (gpio == MOTION_SENSOR_GPIO){
-        printf("Motion detected\n");
         int new = 0;
         new = gpio_read(MOTION_SENSOR_GPIO);
-        if (new) {	
+        if (new) {
+            printf("Motion detected\n");
             identify();	
         }
         motion_detected.value = HOMEKIT_BOOL(new);
