@@ -49,7 +49,7 @@ void identify_task(void *_args) {
             vTaskDelay(100 / portTICK_PERIOD_MS);
         }
 
-        vTaskDelay(250 / portTICK_PERIOD_MS);
+        vTaskDelay(300 / portTICK_PERIOD_MS);
     }
     led_write(false);
     vTaskDelete(NULL);
@@ -149,8 +149,9 @@ void motion_sensor_callback(uint8_t gpio) {
 void gpio_init() {
     gpio_enable(LED_GPIO, GPIO_OUTPUT);	
     gpio_enable(MOTION_SENSOR_GPIO, GPIO_INPUT);
-    gpio_set_pullup(SENSOR_PIN, false, false);
-    gpio_set_pullup(MOTION_SENSOR_GPIO, false, false);
+    gpio_enable(SENSOR_PIN, GPIO_INPUT);
+    //gpio_set_pullup(SENSOR_PIN, false, false);
+    //gpio_set_pullup(MOTION_SENSOR_GPIO, false, false);
     gpio_set_interrupt(MOTION_SENSOR_GPIO, GPIO_INTTYPE_EDGE_ANY, motion_sensor_callback);
 }
 
