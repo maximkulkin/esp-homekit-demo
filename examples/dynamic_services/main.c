@@ -99,29 +99,6 @@ void on_wifi_ready() {
 }
 
 
-void* memdup(void* data, size_t data_size) {
-    void *result = malloc(data_size);
-    memcpy(result, data, data_size);
-    return result;
-}
-
-#define MEMDUP_RANGE(start, end) \
-    memdup(start, ((uint8_t*)end) - ((uint8_t*)start))
-
-#define NEW_HOMEKIT_ACCESSORY(...) \
-    memdup(HOMEKIT_ACCESSORY(__VA_ARGS__), sizeof(homekit_accessory_t))
-
-#define NEW_HOMEKIT_SERVICE(name, ...) \
-    memdup(HOMEKIT_SERVICE(name, ## __VA_ARGS__), sizeof(homekit_service_t))
-
-#define NEW_HOMEKIT_CHARACTERISTIC(name, ...) \
-    memdup(HOMEKIT_CHARACTERISTIC(name, ## __VA_ARGS__), sizeof(homekit_characteristic_t))
-
-#define NEW_HOMEKIT_CHARACTERISTIC_CALLBACK(...) \
-    memdup(HOMEKIT_CHARACTERISTIC_CALLBACK(__VA_ARGS__), \
-           sizeof(homekit_characteristic_change_callback_t))
-
-
 void init_accessory() {
     uint8_t macaddr[6];
     sdk_wifi_get_macaddr(STATION_IF, macaddr);
@@ -133,44 +110,38 @@ void init_accessory() {
              macaddr[3], macaddr[4], macaddr[5]);
 
     homekit_service_t* services[MAX_SERVICES + 1];
-    homekit_characteristic_t* characteristics[MAX_CHARACTERISTICS + 1];
-
     homekit_service_t** s = services;
-    homekit_characteristic_t** c;
 
-    c = characteristics;
-    *(c++) = NEW_HOMEKIT_CHARACTERISTIC(NAME, name_value);
-    *(c++) = NEW_HOMEKIT_CHARACTERISTIC(MANUFACTURER, "HaPK");
-    *(c++) = NEW_HOMEKIT_CHARACTERISTIC(SERIAL_NUMBER, "0");
-    *(c++) = NEW_HOMEKIT_CHARACTERISTIC(MODEL, "Relays");
-    *(c++) = NEW_HOMEKIT_CHARACTERISTIC(FIRMWARE_REVISION, "0.1");
-    *(c++) = NEW_HOMEKIT_CHARACTERISTIC(IDENTIFY, lamp_identify);
-    *(c++) = NULL;
-
-    *(s++) = NEW_HOMEKIT_SERVICE(ACCESSORY_INFORMATION, .characteristics=MEMDUP_RANGE(characteristics, c));
+    *(s++) = NEW_HOMEKIT_SERVICE(ACCESSORY_INFORMATION, .characteristics=(homekit_characteristic_t*[]) {
+        NEW_HOMEKIT_CHARACTERISTIC(NAME, name_value),
+        NEW_HOMEKIT_CHARACTERISTIC(MANUFACTURER, "HaPK"),
+        NEW_HOMEKIT_CHARACTERISTIC(SERIAL_NUMBER, "0"),
+        NEW_HOMEKIT_CHARACTERISTIC(MODEL, "Relays"),
+        NEW_HOMEKIT_CHARACTERISTIC(FIRMWARE_REVISION, "0.1"),
+        NEW_HOMEKIT_CHARACTERISTIC(IDENTIFY, lamp_identify),
+        NULL
+    });
 
     for (int i=0; i < relay_count; i++) {
         int relay_name_len = snprintf(NULL, 0, "Relay %d", i + 1);
         char *relay_name_value = malloc(name_len+1);
         snprintf(relay_name_value, relay_name_len+1, "Relay %d", i + 1);
 
-        c = characteristics;
-        *(c++) = NEW_HOMEKIT_CHARACTERISTIC(NAME, relay_name_value);
-        *(c++) = NEW_HOMEKIT_CHARACTERISTIC(
-            ON, true,
-            .callback=NEW_HOMEKIT_CHARACTERISTIC_CALLBACK(relay_callback, .context=(void*)&relay_gpios[i]),
-        );
-        *(c++) = NULL;
-
-        *(s++) = NEW_HOMEKIT_SERVICE(LIGHTBULB, .characteristics=MEMDUP_RANGE(characteristics, c));
+        *(s++) = NEW_HOMEKIT_SERVICE(LIGHTBULB, .characteristics=(homekit_characteristic_t*[]) {
+            NEW_HOMEKIT_CHARACTERISTIC(NAME, relay_name_value),
+            NEW_HOMEKIT_CHARACTERISTIC(
+                ON, true,
+                .callback=HOMEKIT_CHARACTERISTIC_CALLBACK(
+                    relay_callback, .context=(void*)&relay_gpios[i]
+                ),
+            ),
+            NULL
+        });
     }
 
     *(s++) = NULL;
 
-    accessories[0] = NEW_HOMEKIT_ACCESSORY(
-        .category=homekit_accessory_category_lightbulb,
-        .services=MEMDUP_RANGE(services, s),
-    );
+    accessories[0] = NEW_HOMEKIT_ACCESSORY(.category=homekit_accessory_category_other, .services=services);
     accessories[1] = NULL;
 }
 
