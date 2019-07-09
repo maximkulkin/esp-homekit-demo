@@ -78,7 +78,7 @@ void lamp_identify_task(void *_args) {
 
 void lamp_identify(homekit_value_t _value) {
     printf("Lamp identify\n");
-    xTaskCreate(lamp_identify_task, "Lamp identify", 128, NULL, 2, NULL);
+    xTaskCreate(lamp_identify_task, "Lamp identify", 256, NULL, 2, NULL);
 }
 
 void relay_callback(homekit_characteristic_t *ch, homekit_value_t value, void *context) {
