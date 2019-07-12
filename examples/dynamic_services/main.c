@@ -124,7 +124,7 @@ void init_accessory() {
 
     for (int i=0; i < relay_count; i++) {
         int relay_name_len = snprintf(NULL, 0, "Relay %d", i + 1);
-        char *relay_name_value = malloc(name_len+1);
+        char *relay_name_value = malloc(relay_name_len+1);
         snprintf(relay_name_value, relay_name_len+1, "Relay %d", i + 1);
 
         *(s++) = NEW_HOMEKIT_SERVICE(LIGHTBULB, .characteristics=(homekit_characteristic_t*[]) {
