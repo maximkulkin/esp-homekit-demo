@@ -15,7 +15,6 @@
 
 
 #define MAX_SERVICES 20
-#define MAX_CHARACTERISTICS 10
 
 
 static void wifi_init() {
