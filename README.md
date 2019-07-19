@@ -4,12 +4,14 @@ library](https://github.com/maximkulkin/esp-homekit).
 
 ## Usage ESP32
 
-1. Initialize and sync all submodules (recursively):
+1. Install [esp-idf](https://github.com/espressif/esp-idf) by following [instructions on esp-idf project page](https://github.com/espressif/esp-idf#setting-up-esp-idf). At the end you should have xtensa-esp32-elf toolchain in your path and IDF_PATH environment variable pointing to esp-idf directory.
+
+
+2. Initialize and sync all submodules (recursively):
 ```shell
 git submodule update --init --recursive
 ```
-2. Copy wifi.h.sample -> wifi.h and edit it with correct WiFi SSID and password.
-3. Install [esp-idf](https://github.com/espressif/esp-idf) by following [instructions on esp-idf project page](https://github.com/espressif/esp-idf#setting-up-esp-idf). At the end you should have xtensa-esp32-elf toolchain in your path and IDF_PATH environment variable pointing to esp-idf directory.
+3. Copy wifi.h.sample -> wifi.h and edit it with correct WiFi SSID and password.
 
 4. Configure project:
 ```
