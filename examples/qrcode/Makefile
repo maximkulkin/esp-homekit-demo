@@ -6,8 +6,8 @@ EXTRA_COMPONENTS = \
 	extras/i2c \
 	extras/fonts \
 	$(abspath ../../components/common/wolfssl) \
-	$(abspath ../../components/common/cJSON) \
 	$(abspath ../../components/common/homekit) \
+	$(abspath ../../components/esp-8266/cJSON) \
 	$(abspath ../../components/esp-8266/qrcode)
 
 # Enable fonts provided by extras/fonts package

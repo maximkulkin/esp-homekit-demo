@@ -5,8 +5,8 @@ EXTRA_COMPONENTS = \
 	extras/i2s_dma \
 	extras/ws2812_i2s \
 	$(abspath ../../components/common/wolfssl) \
-	$(abspath ../../components/common/cJSON) \
 	$(abspath ../../components/common/homekit) \
+	$(abspath ../../components/esp-8266/cJSON) \
 	$(abspath ../../components/esp-8266/WS2812FX)
 
 FLASH_SIZE ?= 32

@@ -3,8 +3,8 @@ PROGRAM = led
 EXTRA_COMPONENTS = \
 	extras/http-parser \
 	$(abspath ../../components/common/wolfssl) \
-	$(abspath ../../components/common/cJSON) \
-	$(abspath ../../components/common/homekit)
+	$(abspath ../../components/common/homekit) \
+	$(abspath ../../components/esp-8266/cJSON)
 
 FLASH_SIZE ?= 32
 
