@@ -8,6 +8,8 @@
 #include <freertos/task.h>
 #include <driver/gpio.h>
 
+#include <driver/gpio.h>
+
 #include <homekit/homekit.h>
 #include <homekit/characteristics.h>
 #include "wifi.h"
