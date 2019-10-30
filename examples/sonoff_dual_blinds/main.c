@@ -43,11 +43,11 @@ const int relay0_gpio = 12;
 const int relay1_gpio = 5;
 // The GPIO pin that is connected to the LED on the Sonoff Dual R2
 const int led_gpio = 13;
-// The GPIO pin that is oconnected to the button on the Sonoff Dual R2
+// The GPIO pin that is connected to the button on the Sonoff Dual R2
 const int button_gpio = 10;
-// The GPIO pin that is oconnected to the BUTTON1 header pin
+// The GPIO pin that is connected to the BUTTON1 header pin
 const int button1_gpio = 9;
-// The GPIO pin that is oconnected to the BUTTON0 header pin
+// The GPIO pin that is connected to the BUTTON0 header pin
 const int button0_gpio = 0;
 
 const int button_up = 9;
