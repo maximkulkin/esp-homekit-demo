@@ -40,7 +40,7 @@
 const int relay_gpio = 12;
 // The GPIO pin that is connected to the LED on the Sonoff Basic.
 const int led_gpio = 13;
-// The GPIO pin that is oconnected to the button on the Sonoff Basic.
+// The GPIO pin that is connected to the button on the Sonoff Basic.
 const int button_gpio = 0;
 
 void switch_on_callback(homekit_characteristic_t *_ch, homekit_value_t on, void *context);

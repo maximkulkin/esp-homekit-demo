@@ -1,5 +1,5 @@
 [submodule "components/cJSON"]
-	path = components/common/cJSON
+	path = components/esp-8266/cJSON
 	url = https://github.com/maximkulkin/esp-cjson
 [submodule "components/wolfssl"]
 	path = components/common/wolfssl
@@ -19,3 +19,6 @@
 [submodule "components/led-status"]
 	path = components/esp-8266/led-status
 	url = https://github.com/maximkulkin/esp-led-status.git
+[submodule "components/esp-8266/qrcode"]
+	path = components/esp-8266/qrcode
+	url = https://github.com/maximkulkin/esp-qrcode.git

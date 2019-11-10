@@ -5,8 +5,8 @@ EXTRA_COMPONENTS = \
 	extras/ws2812_i2s \
 	extras/rboot-ota \
 	extras/http-parser \
+	$(abspath ../../components/esp-8266/cJSON) \
 	$(abspath ../../components/common/wolfssl) \
-	$(abspath ../../components/common/cJSON) \
 	$(abspath ../../components/common/homekit)
 
 FLASH_SIZE ?= 32

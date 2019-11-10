@@ -5,8 +5,8 @@ EXTRA_COMPONENTS = \
 	extras/multipwm \
 	extras/dhcpserver \
 	$(abspath ../../components/esp-8266/wifi_config) \
+	$(abspath ../../components/esp-8266/cJSON) \
 	$(abspath ../../components/common/wolfssl) \
-	$(abspath ../../components/common/cJSON) \
 	$(abspath ../../components/common/homekit)
 
 FLASH_SIZE ?= 8

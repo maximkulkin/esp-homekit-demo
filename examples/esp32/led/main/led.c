@@ -6,6 +6,9 @@
 
 #include <freertos/FreeRTOS.h>
 #include <freertos/task.h>
+#include <driver/gpio.h>
+
+#include <driver/gpio.h>
 
 #include <homekit/homekit.h>
 #include <homekit/characteristics.h>
