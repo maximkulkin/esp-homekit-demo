@@ -1,24 +1,27 @@
-[submodule "components/cJSON"]
-	path = components/esp-8266/cJSON
-	url = https://github.com/maximkulkin/esp-cjson
 [submodule "components/wolfssl"]
 	path = components/common/wolfssl
 	url = https://github.com/maximkulkin/esp-wolfssl
 [submodule "components/homekit"]
 	path = components/common/homekit
 	url = https://github.com/maximkulkin/esp-homekit
-[submodule "components/http-parser"]
-	path = components/esp-32/http-parser
+[submodule "components/esp32/idf/http-parser"]
+	path = components/esp-idf/http-parser
 	url = https://github.com/maximkulkin/esp-http-parser.git
-[submodule "components/wifi_config"]
-	path = components/esp-8266/wifi_config
-	url = https://github.com/maximkulkin/esp-wifi-config
-[submodule "components/WS2812FX"]
-	path = components/esp-8266/WS2812FX
+[submodule "components/esp8266-idf/http-parser"]
+	path = components/esp8266-rtos-sdk/http-parser
+	url = https://github.com/maximkulkin/esp-http-parser.git
+[submodule "components/esp8266-open-rtos/WS2812FX"]
+	path = components/esp8266-open-rtos/WS2812FX
 	url = https://github.com/pcsaito/WS2812FX-rtos
-[submodule "components/led-status"]
-	path = components/esp-8266/led-status
+[submodule "components/esp8266-open-rtos/cJSON"]
+	path = components/esp8266-open-rtos/cJSON
+	url = https://github.com/maximkulkin/esp-cjson
+[submodule "components/esp8266-open-rtos/led-status"]
+	path = components/esp8266-open-rtos/led-status
 	url = https://github.com/maximkulkin/esp-led-status.git
-[submodule "components/esp-8266/qrcode"]
-	path = components/esp-8266/qrcode
+[submodule "components/esp8266-open-rtos/qrcode"]
+	path = components/esp8266-open-rtos/qrcode
 	url = https://github.com/maximkulkin/esp-qrcode.git
+[submodule "components/esp8266-open-rtos/wifi_config"]
+	path = components/esp8266-open-rtos/wifi_config
+	url = https://github.com/maximkulkin/esp-wifi-config

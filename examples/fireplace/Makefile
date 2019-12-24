@@ -5,7 +5,7 @@ EXTRA_COMPONENTS = \
 	extras/ws2812_i2s \
 	extras/rboot-ota \
 	extras/http-parser \
-	$(abspath ../../components/esp-8266/cJSON) \
+	$(abspath ../../components/esp8266-open-rtos/cJSON) \
 	$(abspath ../../components/common/wolfssl) \
 	$(abspath ../../components/common/homekit)
 
