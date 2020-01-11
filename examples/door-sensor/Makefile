@@ -2,9 +2,9 @@ PROGRAM = door-sensor
 
 EXTRA_COMPONENTS = \
 	extras/http-parser \
-	$(abspath ../../components/wolfssl) \
-	$(abspath ../../components/cJSON) \
-	$(abspath ../../components/homekit)
+	$(abspath ../../components/esp8266-open-rtos/cJSON) \
+	$(abspath ../../components/common/wolfssl) \
+	$(abspath ../../components/common/homekit)
 
 REED_PIN ?= 4
 
