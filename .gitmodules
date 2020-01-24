@@ -25,3 +25,6 @@
 [submodule "components/esp8266-open-rtos/wifi_config"]
 	path = components/esp8266-open-rtos/wifi_config
 	url = https://github.com/maximkulkin/esp-wifi-config
+[submodule "components/common/button"]
+	path = components/common/button
+	url = https://github.com/maximkulkin/esp-button
