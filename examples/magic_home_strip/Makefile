@@ -4,8 +4,8 @@ EXTRA_COMPONENTS = \
 	extras/http-parser \
 	extras/multipwm \
 	extras/dhcpserver \
-	$(abspath ../../components/esp-8266/wifi_config) \
-	$(abspath ../../components/esp-8266/cJSON) \
+	$(abspath ../../components/esp8266-open-rtos/wifi_config) \
+	$(abspath ../../components/esp8266-open-rtos/cJSON) \
 	$(abspath ../../components/common/wolfssl) \
 	$(abspath ../../components/common/homekit)
 

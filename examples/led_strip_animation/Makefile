@@ -4,10 +4,10 @@ EXTRA_COMPONENTS = \
 	extras/http-parser \
 	extras/i2s_dma \
 	extras/ws2812_i2s \
-	$(abspath ../../components/esp-8266/cJSON) \
+	$(abspath ../../components/esp8266-open-rtos/cJSON) \
 	$(abspath ../../components/common/wolfssl) \
 	$(abspath ../../components/common/homekit) \
-	$(abspath ../../components/esp-8266/WS2812FX)
+	$(abspath ../../components/esp8266-open-rtos/WS2812FX)
 
 FLASH_SIZE ?= 32
 # FLASH_SIZE ?= 8
