@@ -7,8 +7,8 @@
 #define TEMP_DIFF 0.5 // Set this for differential 
 #define INVERT_RELAY_SWITCH 0
 #define DHT_TYPE DHT_TYPE_DHT22 // If you are using DHT11 change the type to DHT_TYPE_DHT11
-#define BUTTON_UP_PIN 13
-#define BUTTON_DOWN_PIN 12
+#define BUTTON_UP_PIN 12
+#define BUTTON_DOWN_PIN 13
 
 #include <stdio.h>
 #include <espressif/esp_wifi.h>
@@ -41,9 +41,9 @@ homekit_characteristic_t target_temperature  = HOMEKIT_CHARACTERISTIC_(
     TARGET_TEMPERATURE, 22, .callback=HOMEKIT_CHARACTERISTIC_CALLBACK(on_update)
 );
 homekit_characteristic_t units = HOMEKIT_CHARACTERISTIC_(TEMPERATURE_DISPLAY_UNITS, 0);
-homekit_characteristic_t current_state = HOMEKIT_CHARACTERISTIC_(CURRENT_HEATING_COOLING_STATE, 0);
+homekit_characteristic_t current_state = HOMEKIT_CHARACTERISTIC_(CURRENT_HEATING_COOLING_STATE, 1);
 homekit_characteristic_t target_state = HOMEKIT_CHARACTERISTIC_(
-    TARGET_HEATING_COOLING_STATE, 0, .valid_values = {.count = 2, .values = (uint8_t[]) { 0, 1}}, .callback=HOMEKIT_CHARACTERISTIC_CALLBACK(on_update)
+    TARGET_HEATING_COOLING_STATE, 1, .valid_values = {.count = 2, .values = (uint8_t[]) { 0, 1}}, .callback=HOMEKIT_CHARACTERISTIC_CALLBACK(on_update)
 );
 homekit_characteristic_t cooling_threshold = HOMEKIT_CHARACTERISTIC_(
     COOLING_THRESHOLD_TEMPERATURE, 25, .callback=HOMEKIT_CHARACTERISTIC_CALLBACK(on_update)
@@ -97,26 +97,26 @@ void display_temperature(float temperature, float humidity) {
     char str[16];
     //float f = 123.456789;
     //snprintf(str, sizeof(str), "%.2f", temperature);
-
+    
     //ssd1306_display_on(&display, true);
-
+    
     // Display temp
     snprintf(str, sizeof(str), "%.1f", temperature);
     ssd1306_fill_rectangle(&display, display_buffer, 0, 0, DISPLAY_WIDTH, DISPLAY_HEIGHT, OLED_COLOR_BLACK);
     ssd1306_draw_string(&display, display_buffer, font_builtin_fonts[DEFAULT_FONT2], 0, 0, str, OLED_COLOR_WHITE, OLED_COLOR_BLACK);
-    ssd1306_draw_string(&display, display_buffer, font_builtin_fonts[DEFAULT_FONT2], 74, 0, "C", OLED_COLOR_WHITE, OLED_COLOR_BLACK);
-    ssd1306_draw_string(&display, display_buffer, font_builtin_fonts[DEFAULT_FONT2], 60, 0, "°", OLED_COLOR_WHITE, OLED_COLOR_BLACK);
-
+    ssd1306_draw_string(&display, display_buffer, font_builtin_fonts[DEFAULT_FONT2], 64, 0, "C", OLED_COLOR_WHITE, OLED_COLOR_BLACK);
+    //ssd1306_draw_string(&display, display_buffer, font_builtin_fonts[DEFAULT_FONT2], 50, 0, "°", OLED_COLOR_WHITE, OLED_COLOR_BLACK);
+   
     // Display humidity
     snprintf(str, sizeof(str), "%.1f", humidity);
     ssd1306_draw_string(&display, display_buffer, font_builtin_fonts[DEFAULT_FONT2], 0, 24, str, OLED_COLOR_WHITE, OLED_COLOR_BLACK);
-    ssd1306_draw_string(&display, display_buffer, font_builtin_fonts[DEFAULT_FONT2], 90, 24, "%", OLED_COLOR_WHITE, OLED_COLOR_BLACK);
-
-    // Display target temp
+    ssd1306_draw_string(&display, display_buffer, font_builtin_fonts[DEFAULT_FONT2], 64, 24, "%", OLED_COLOR_WHITE, OLED_COLOR_BLACK);
+   
+    // Display target temp    
     snprintf(str, sizeof(str), "Target: %.1f", target_temperature.value.float_value);
     ssd1306_draw_string(&display, display_buffer, font_builtin_fonts[DEFAULT_FONT], 0, 48, str, OLED_COLOR_WHITE, OLED_COLOR_BLACK);
-    ssd1306_draw_string(&display, display_buffer, font_builtin_fonts[DEFAULT_FONT], 90, 48, "C", OLED_COLOR_WHITE, OLED_COLOR_BLACK);
-    ssd1306_draw_string(&display, display_buffer, font_builtin_fonts[DEFAULT_FONT], 78, 48, "°", OLED_COLOR_WHITE, OLED_COLOR_BLACK);
+    ssd1306_draw_string(&display, display_buffer, font_builtin_fonts[DEFAULT_FONT], 80, 48, "C", OLED_COLOR_WHITE, OLED_COLOR_BLACK);
+    //ssd1306_draw_string(&display, display_buffer, font_builtin_fonts[DEFAULT_FONT], 78, 48, "°", OLED_COLOR_WHITE, OLED_COLOR_BLACK);
 
     if (ssd1306_load_frame_buffer(&display, display_buffer)) {
         printf("Failed to load buffer for OLED display\n");
