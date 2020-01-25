@@ -6,7 +6,7 @@ EXTRA_COMPONENTS = \
 	extras/ssd1306 \
 	extras/i2c \
 	extras/fonts \
-	$(abspath ../../components/esp-8266/cJSON) \
+	$(abspath ../../components/esp8266-open-rtos/cJSON) \
 	$(abspath ../../components/common/wolfssl) \
 	$(abspath ../../components/common/homekit)
 
