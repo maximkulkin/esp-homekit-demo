@@ -1,7 +1,7 @@
 /*
  * Thermostat example
  */
-#define TEMPERATURE_SENSOR_PIN 0 // GPIO2 is D4 on NodeMCU
+#define TEMPERATURE_SENSOR_PIN 2 // GPIO2 is D4 on NodeMCU
 #define HEATER_PIN 15 // GPIO15 is D8 on NodeMCU
 #define TEMPERATURE_POLL_PERIOD 10000 // Temp refresh rate to milliseconds
 #define TEMP_DIFF 0.5 // Set this for differential 
