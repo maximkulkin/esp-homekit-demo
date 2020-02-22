@@ -28,6 +28,7 @@
 #include <button.h>
 #include <dht/dht.h>
 void update_state();
+static bool heater_power = 1;
 
 
 void on_update(homekit_characteristic_t *ch, homekit_value_t value, void *context) {
@@ -94,20 +95,26 @@ void display_temperature_task(void *_args) {
         // Display temp
         snprintf(str, sizeof(str), "%.1f", temperature);
         ssd1306_fill_rectangle(&display, display_buffer, 0, 0, DISPLAY_WIDTH, DISPLAY_HEIGHT, OLED_COLOR_BLACK);
-        ssd1306_draw_string(&display, display_buffer, font_builtin_fonts[DEFAULT_FONT2], 0, 0, str, OLED_COLOR_WHITE, OLED_COLOR_BLACK);
-        ssd1306_draw_string(&display, display_buffer, font_builtin_fonts[DEFAULT_FONT2], 64, 0, "C", OLED_COLOR_WHITE, OLED_COLOR_BLACK);
+        ssd1306_draw_string(&display, display_buffer, font_builtin_fonts[DEFAULT_FONT], 0, 0, "TEMP", OLED_COLOR_WHITE, OLED_COLOR_BLACK);
+        ssd1306_draw_string(&display, display_buffer, font_builtin_fonts[DEFAULT_FONT], 64, 0, "Humidity", OLED_COLOR_WHITE, OLED_COLOR_BLACK);
+
+        ssd1306_draw_string(&display, display_buffer, font_builtin_fonts[DEFAULT_FONT1], 0, 15, str, OLED_COLOR_WHITE, OLED_COLOR_BLACK);
         //ssd1306_draw_string(&display, display_buffer, font_builtin_fonts[DEFAULT_FONT2], 50, 0, "°", OLED_COLOR_WHITE, OLED_COLOR_BLACK);
     
         // Display humidity
-        snprintf(str, sizeof(str), "%.1f", humidity);
-        ssd1306_draw_string(&display, display_buffer, font_builtin_fonts[DEFAULT_FONT2], 0, 24, str, OLED_COLOR_WHITE, OLED_COLOR_BLACK);
-        ssd1306_draw_string(&display, display_buffer, font_builtin_fonts[DEFAULT_FONT2], 64, 24, "%", OLED_COLOR_WHITE, OLED_COLOR_BLACK);
+        snprintf(str, sizeof(str), "%.1f %%", humidity);
+        ssd1306_draw_string(&display, display_buffer, font_builtin_fonts[DEFAULT_FONT1], 64, 15, str, OLED_COLOR_WHITE, OLED_COLOR_BLACK);
     
         // Display target temp    
-        snprintf(str, sizeof(str), "Target: %.1f", target_temperature.value.float_value);
-        ssd1306_draw_string(&display, display_buffer, font_builtin_fonts[DEFAULT_FONT], 0, 48, str, OLED_COLOR_WHITE, OLED_COLOR_BLACK);
-        ssd1306_draw_string(&display, display_buffer, font_builtin_fonts[DEFAULT_FONT], 80, 48, "C", OLED_COLOR_WHITE, OLED_COLOR_BLACK);
-        //ssd1306_draw_string(&display, display_buffer, font_builtin_fonts[DEFAULT_FONT], 78, 48, "°", OLED_COLOR_WHITE, OLED_COLOR_BLACK);
+        if (heater_power){
+            snprintf(str, sizeof(str), "Target: %.1f", target_temperature.value.float_value);
+            ssd1306_draw_string(&display, display_buffer, font_builtin_fonts[DEFAULT_FONT], 0, 40, str, OLED_COLOR_WHITE, OLED_COLOR_BLACK);
+            ssd1306_draw_string(&display, display_buffer, font_builtin_fonts[DEFAULT_FONT], 80, 40, "C", OLED_COLOR_WHITE, OLED_COLOR_BLACK);
+            //ssd1306_draw_string(&display, display_buffer, font_builtin_fonts[DEFAULT_FONT], 78, 40, "°", OLED_COLOR_WHITE, OLED_COLOR_BLACK);
+        } else {
+            snprintf(str, sizeof(str), "POWER OFF");
+            ssd1306_draw_string(&display, display_buffer, font_builtin_fonts[DEFAULT_FONT1], 0, 40, str, OLED_COLOR_WHITE, OLED_COLOR_BLACK);
+        }
 
         if (ssd1306_load_frame_buffer(&display, display_buffer)) {
             printf("Failed to load buffer for OLED display\n");
@@ -141,17 +148,18 @@ void heaterOn() {
 
 void heaterOff() {
     gpio_write(HEATER_PIN, INVERT_RELAY_SWITCH ? true : false);
+
 }
 
 void update_state() {
     uint8_t state = target_state.value.int_value;
+    heater_power = state;
     if ((state == 1 && current_temperature.value.float_value < target_temperature.value.float_value) ||
             (state == 3 && current_temperature.value.float_value < heating_threshold.value.float_value)) {
         if (current_state.value.int_value != 1) {
             current_state.value = HOMEKIT_UINT8(1);
             homekit_characteristic_notify(&current_state, current_state.value);
-            heaterOn();
-            
+            heaterOn();            
         }
     } else if ((state == 2 && current_temperature.value.float_value > target_temperature.value.float_value) ||
             (state == 3 && current_temperature.value.float_value > cooling_threshold.value.float_value)) {
