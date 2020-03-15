@@ -8,4 +8,4 @@ set(EXTRA_COMPONENT_DIRS
 include_directories(../../../)
 
 include($ENV{IDF_PATH}/tools/cmake/project.cmake)
-project(led)
+project(dynamic_services)
