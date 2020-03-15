@@ -9,7 +9,7 @@
 #include <homekit/homekit.h>
 #include <homekit/characteristics.h>
 #include "wifi.h"
-#include "button.h"
+#include <button.h>
 
 
 #ifndef BUTTON_PIN
@@ -37,7 +37,7 @@ void button_identify(homekit_value_t _value) {
 homekit_characteristic_t button_event = HOMEKIT_CHARACTERISTIC_(PROGRAMMABLE_SWITCH_EVENT, 0);
 
 
-void button_callback(uint8_t gpio, button_event_t event) {
+void button_callback(button_event_t event, void *context) {
     switch (event) {
         case button_event_single_press:
             printf("single press\n");
@@ -100,7 +100,12 @@ void user_init(void) {
     uart_set_baud(0, 115200);
 
     wifi_init();
-    if (button_create(BUTTON_PIN, button_callback)) {
+    button_config_t button_config = BUTTON_CONFIG(
+        button_active_low, 
+        .max_repeat_presses=2,
+        .long_press_time=1000,
+    );
+    if (button_create(BUTTON_PIN, button_config, button_callback, NULL)) {
         printf("Failed to initialize button\n");
     }
     homekit_server_init(&config);
