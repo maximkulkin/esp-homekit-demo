@@ -28,8 +28,10 @@ static void wifi_init() {
     sdk_wifi_station_connect();
 }
 
-const uint8_t valve_gpios[4] = {
-  1, 2, 3, 4
+const uint8_t pump_gpio = 16;
+
+const uint8_t valve_gpios[1] = {
+    4
 };
 const size_t valve_count = sizeof(valve_gpios) / sizeof(*valve_gpios);
 
@@ -85,6 +87,7 @@ void start_stop_task(bool start) {
      */
     if(start == true && task_running == false) {
         task_running = true;
+        gpio_write(pump_gpio, 1);
         vTaskResume(gate_task);
     } 
     if(start == false) {
@@ -96,6 +99,7 @@ void start_stop_task(bool start) {
         }
         if(idle == true) {
             task_running = false;
+            gpio_write(pump_gpio, 1);
             vTaskSuspend(gate_task);
         }
     }
@@ -125,10 +129,12 @@ void on_update_active(homekit_characteristic_t *ch, homekit_value_t value, void 
 void update_valve_state(bool state, valve_t *thisValve) {
     if(state) {
         printf("--> open gate number: %d \n", thisValve->gpio);
+        gpio_write(thisValve->gpio, 1);
         set_and_notify(thisValve->in_use, HOMEKIT_UINT8(1));
     }
     else {
         printf("--> close gate number: %d \n", thisValve->gpio);
+        gpio_write(thisValve->gpio, 0);
         set_and_notify(thisValve->in_use, HOMEKIT_UINT8(0));
     }
 }
@@ -156,9 +162,14 @@ void init_accessory() {
         NULL
     });
 
+    gpio_enable(pump_gpio, GPIO_OUTPUT);
+    gpio_write(pump_gpio, 0);
+
     for (int i=0; i < valve_count; i++) {
         valves[i].number = i;
         valves[i].gpio = valve_gpios[i];
+        gpio_enable(valve_gpios[i], GPIO_OUTPUT);
+        gpio_write(valve_gpios[i], 0);
         homekit_service_t *nextService = NEW_HOMEKIT_SERVICE(VALVE, .characteristics=(homekit_characteristic_t*[]) {
             NEW_HOMEKIT_CHARACTERISTIC(SERVICE_LABEL_INDEX, i+1),
             NEW_HOMEKIT_CHARACTERISTIC(VALVE_TYPE, 1),
@@ -195,6 +206,7 @@ homekit_server_config_t config = {
 };
 
 void user_init(void) {
+    
     uart_set_baud(0, 115200);
     init_accessory();
     xTaskCreate(task_fn, "gate_task", 256, NULL, tskIDLE_PRIORITY, &gate_task);
