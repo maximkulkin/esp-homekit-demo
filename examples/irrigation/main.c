@@ -28,10 +28,12 @@ static void wifi_init() {
     sdk_wifi_station_connect();
 }
 
+bool pumpEnabled = false;
 const uint8_t pump_gpio = 16;
-
-const uint8_t valve_gpios[1] = {
-    4
+bool valveOn = false;
+bool pumpOn = false;
+const uint8_t valve_gpios[4] = {
+    14,12,13,5
 };
 const size_t valve_count = sizeof(valve_gpios) / sizeof(*valve_gpios);
 
@@ -52,20 +54,44 @@ typedef struct {
 valve_t valves[4];
 
 void start_stop_task(bool);
-void update_running(bool, valve_t*);
 void update_valve_state(bool, valve_t*);
 void on_update_active(homekit_characteristic_t *ch, homekit_value_t value, void *context);
+
+// GPIO 
+void start_stop_pump(bool start) {
+    if(!pumpEnabled) {
+        return;
+    }
+    if(start) {
+        gpio_write(pump_gpio, pumpOn);
+    } else {
+        gpio_write(pump_gpio, !pumpOn);
+    }
+}
+
+void init_gpio() {
+    if(pumpEnabled) {
+        gpio_enable(pump_gpio, GPIO_OUTPUT);
+        gpio_write(pump_gpio, 0);
+    }
+    for (int i=0; i < valve_count; i++) {
+        gpio_enable(valve_gpios[i], GPIO_OUTPUT);
+        gpio_write(valve_gpios[i], !valveOn);
+    }
+}
+
 void set_and_notify(homekit_characteristic_t *ch, const homekit_value_t value) {
+    printf("set %s from %d to %d\n", ch->description, ch->value.int_value, value.int_value);
     ch->value = value;
     homekit_characteristic_notify(ch, value);
 }
 
-void task_fn() {
+void gate_task_fn() {
     while(true) {
         vTaskDelay(pdMS_TO_TICKS(1000));
         for (int i=0; i < valve_count; i++) {
             valve_t valve = valves[i];
-            if(valve.active->value.int_value == 1) {
+            if(valve.in_use->value.int_value == 1 && valve.active->value.int_value == 1) {
                 int new_duration = valve.remaining_duration->value.int_value - 1;
                 // set without notify like the hap spec wants it :) 
                 if(new_duration>0) {
@@ -73,7 +99,11 @@ void task_fn() {
                 }
                 if(new_duration==0) {
                     set_and_notify(valve.remaining_duration, HOMEKIT_UINT32(new_duration));
+                }
+                if(new_duration == -1) {
+                    set_and_notify(valve.in_use, HOMEKIT_UINT8(0));
                     set_and_notify(valve.active, HOMEKIT_UINT8(0));
+                    start_stop_task(false);
                 }
             }
         }
@@ -87,41 +117,34 @@ void start_stop_task(bool start) {
      */
     if(start == true && task_running == false) {
         task_running = true;
-        gpio_write(pump_gpio, 1);
+        start_stop_pump(true);
         vTaskResume(gate_task);
     } 
     if(start == false) {
         bool idle = true;
         for (int i=0; i < valve_count; i++) {
-            if(valves[i].active->value.int_value == 1 && valves[i].in_use->value.int_value == 1) {
+            if(valves[i].active->value.int_value == 1 || valves[i].in_use->value.int_value == 1) {
                 idle = false;
             }
         }
         if(idle == true) {
             task_running = false;
-            gpio_write(pump_gpio, 1);
+            start_stop_pump(false);
+            printf("Suspend gate_task\n");
             vTaskSuspend(gate_task);
         }
     }
 }
 
-void update_running(bool target, valve_t *thisValve) {
-    if(target == true) {
-        update_valve_state(true, thisValve);
+void on_update_active(homekit_characteristic_t *ch, homekit_value_t value, void *context) {
+    valve_t *thisValve = (valve_t *) context;
+    printf("%s is now %d\n", thisValve->active->description, thisValve->active->value.int_value);
+    if(value.int_value == 1) {
         set_and_notify(thisValve->remaining_duration, thisValve->set_duration->value);
+        update_valve_state(true, thisValve);
         start_stop_task(true);
     } else {
         update_valve_state(false, thisValve);
-        start_stop_task(false);
-    }
-}
-
-void on_update_active(homekit_characteristic_t *ch, homekit_value_t value, void *context) {
-    valve_t *thisValve = (valve_t *) context;
-    if(value.int_value == 1) {
-        update_running(true, thisValve);
-    } else {
-        update_running(false, thisValve);
     }
 }
 
@@ -129,13 +152,12 @@ void on_update_active(homekit_characteristic_t *ch, homekit_value_t value, void 
 void update_valve_state(bool state, valve_t *thisValve) {
     if(state) {
         printf("--> open gate number: %d \n", thisValve->gpio);
-        gpio_write(thisValve->gpio, 1);
+        gpio_write(thisValve->gpio, valveOn);
         set_and_notify(thisValve->in_use, HOMEKIT_UINT8(1));
     }
     else {
         printf("--> close gate number: %d \n", thisValve->gpio);
-        gpio_write(thisValve->gpio, 0);
-        set_and_notify(thisValve->in_use, HOMEKIT_UINT8(0));
+        gpio_write(thisValve->gpio, !valveOn);
     }
 }
 
@@ -162,14 +184,9 @@ void init_accessory() {
         NULL
     });
 
-    gpio_enable(pump_gpio, GPIO_OUTPUT);
-    gpio_write(pump_gpio, 0);
-
     for (int i=0; i < valve_count; i++) {
         valves[i].number = i;
         valves[i].gpio = valve_gpios[i];
-        gpio_enable(valve_gpios[i], GPIO_OUTPUT);
-        gpio_write(valve_gpios[i], 0);
         homekit_service_t *nextService = NEW_HOMEKIT_SERVICE(VALVE, .characteristics=(homekit_characteristic_t*[]) {
             NEW_HOMEKIT_CHARACTERISTIC(SERVICE_LABEL_INDEX, i+1),
             NEW_HOMEKIT_CHARACTERISTIC(VALVE_TYPE, 1),
@@ -206,10 +223,10 @@ homekit_server_config_t config = {
 };
 
 void user_init(void) {
-    
     uart_set_baud(0, 115200);
+    init_gpio();
     init_accessory();
-    xTaskCreate(task_fn, "gate_task", 256, NULL, tskIDLE_PRIORITY, &gate_task);
+    xTaskCreate(gate_task_fn, "gate_task", 256, NULL, tskIDLE_PRIORITY, &gate_task);
     vTaskSuspend(gate_task);
     task_running = false;
     wifi_init();
