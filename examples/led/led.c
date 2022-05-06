@@ -71,7 +71,7 @@ void led_on_set(homekit_value_t value) {
 }
 
 
-homekit_accessory_t *accessories[] = {
+const homekit_accessory_t *accessories[] = {
     HOMEKIT_ACCESSORY(.id=1, .category=homekit_accessory_category_lightbulb, .services=(homekit_service_t*[]){
         HOMEKIT_SERVICE(ACCESSORY_INFORMATION, .characteristics=(homekit_characteristic_t*[]){
             HOMEKIT_CHARACTERISTIC(NAME, "Sample LED"),
@@ -97,7 +97,7 @@ homekit_accessory_t *accessories[] = {
 };
 
 homekit_server_config_t config = {
-    .accessories = accessories,
+    .accessories = (homekit_accessory_t**)accessories,
     .password = "111-11-111"
 };
 
