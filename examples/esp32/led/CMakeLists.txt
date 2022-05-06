@@ -7,5 +7,7 @@ set(EXTRA_COMPONENT_DIRS
 
 include_directories(../../../)
 
+set(COMPONENTS main)
+
 include($ENV{IDF_PATH}/tools/cmake/project.cmake)
 project(led)
