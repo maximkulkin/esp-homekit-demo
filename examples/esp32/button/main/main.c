@@ -107,6 +107,8 @@ void button_callback(button_event_t event, void *context) {
 }
 
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Woverride-init"
 homekit_accessory_t *accessories[] = {
     HOMEKIT_ACCESSORY(
         .id=1,
@@ -131,6 +133,7 @@ homekit_accessory_t *accessories[] = {
     ),
     NULL
 };
+#pragma GCC diagnostic pop
 
 
 homekit_server_config_t config = {
@@ -154,11 +157,14 @@ void app_main(void) {
 
     wifi_init();
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Woverride-init"
     button_config_t button_config = BUTTON_CONFIG(
         button_active_low, 
         .max_repeat_presses=2,
         .long_press_time=1000,
     );
+#pragma GCC diagnostic pop
     if (button_create(button_gpio, button_config, button_callback, NULL)) {
         printf("Failed to initialize button\n");
     }
